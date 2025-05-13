@@ -14,6 +14,9 @@ multitasking==0.0.11
 # Web Backend (choose one backend, or include both if needed)
 Flask==3.1.0
 Flask-Cors==5.0.0
+jwt
+Flask-Login
+Flask-SQLAlchemy
 # OR if using FastAPI:
 fastapi==0.115.8
 starlette==0.45.3
@@ -30,3 +33,6 @@ matplotlib==3.10.1
 # Utility
 tqdm==4.67.1
 pyfiglet==1.0.2
+
+dotenv
+
