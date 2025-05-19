@@ -13,7 +13,7 @@ multitasking==0.0.11
 
 # Web Backend (choose one backend, or include both if needed)
 Flask==3.1.1
-Flask-Cors==5.0.0
+Flask-Cors==6.0.0
 # OR if using FastAPI:
 fastapi==0.115.8
 starlette==0.45.3
