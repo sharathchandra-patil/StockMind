@@ -50,6 +50,7 @@
  
   <section id="input" class="section"> 
     <h2>Analyze a Company</h2> 
+    <!-- Fixed: Added id="company-form" to the form -->
     <form id="company-form"> 
       <input type="text" id="companyName" placeholder="Enter Company Name..." required> 
       <button type="submit">Analyze</button> 
@@ -98,165 +99,324 @@
  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
   <script> 
-    const companyForm = document.getElementById('company-form'); 
-    const loadingText = document.getElementById('loading'); 
-    const resultsSection = document.getElementById('results'); 
-    const descriptionSection = document.getElementById('descriptionSection'); 
-    const tickerSection = document.getElementById('tickerSection'); 
-    const stockPriceSection = document.getElementById('stockPriceSection'); 
-    const graphSection = document.getElementById('graphSection'); 
-    const competitorsSection = document.getElementById('competitorsSection'); 
-    const topCompetitorsSection = document.getElementById('topCompetitorsSection'); 
+    // Wait for the DOM to be fully loaded before accessing any elements
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("DOM fully loaded - initializing script");
+      
+      // Check if elements exist before trying to use them
+      const companyForm = document.getElementById('company-form');
+      const loadingText = document.getElementById('loading');
+      const resultsSection = document.getElementById('results');
+      const descriptionSection = document.getElementById('descriptionSection');
+      const tickerSection = document.getElementById('tickerSection');
+      const stockPriceSection = document.getElementById('stockPriceSection');
+      const graphSection = document.getElementById('graphSection');
+      const competitorsSection = document.getElementById('competitorsSection');
+      const topCompetitorsSection = document.getElementById('topCompetitorsSection');
 
-    let stockChartInstance = null;
-    let topCompetitorsChartInstance = null;
- 
-    companyForm.addEventListener('submit', async (e) => { 
-      e.preventDefault(); 
-      const companyName = document.getElementById('companyName').value.trim(); 
-      if (!companyName) { 
-        alert('Enter a company name!'); 
-        return; 
-      } 
- 
-      loadingText.style.display = 'block'; 
- 
-      try {
-        // Get the current hostname and use it for the API call
-        const apiUrl = window.location.origin;
-        const response = await fetch(`${apiUrl}/analyze_company?company_name=${encodeURIComponent(companyName)}`); 
-        const data = await response.json(); 
- 
-        if (data.success) { 
-          resultsSection.style.display = 'block'; 
-          descriptionSection.style.display = 'block'; 
-          tickerSection.style.display = 'block'; 
-          stockPriceSection.style.display = 'block'; 
-          graphSection.style.display = 'block'; 
-          competitorsSection.style.display = 'block'; 
- 
-          document.getElementById('description').textContent = data.description; 
-          document.getElementById('ticker').textContent = data.ticker; 
-          document.getElementById('stock-price').textContent = `$${data.stock_prices[data.stock_prices.length - 1]}`; 
- 
-          const competitorsList = document.getElementById('competitorsList'); 
-          competitorsList.textContent = ''; 
-          data.competitors.forEach((sector) => { 
-            competitorsList.textContent += `${sector.name}\n`; 
-            sector.competitors.forEach((competitor) => { 
-              competitorsList.textContent += `\t${competitor}\n`; 
-            }); 
-            competitorsList.textContent += `\n`; 
-          }); 
- 
-          renderGraph(data.stock_prices, data.time_labels); 
- 
-          if (data.top_competitors.length > 0) { 
-            const topCompetitorsList = document.getElementById('topCompetitorsList'); 
-            topCompetitorsList.innerHTML = ''; 
- 
-            data.top_competitors.forEach((comp) => { 
-              const div = document.createElement('div'); 
-              div.textContent = `${comp.name} - Stock Price: $${comp.stock_price}`; 
-              topCompetitorsList.appendChild(div); 
-            }); 
- 
-            topCompetitorsSection.style.display = 'block'; 
-            renderTopCompetitorsGraph(data.top_competitors); 
-          } 
-        } else { 
-          alert(data.error || 'Error fetching data.'); 
-        } 
-      } catch (error) { 
-        console.error('Error:', error); 
-        alert('Error fetching data.'); 
-      } finally { 
-        loadingText.style.display = 'none'; 
-      } 
-    }); 
- 
-    function renderGraph(stockPrices, timeLabels) { 
-      const ctx = document.getElementById('stockGraph').getContext('2d'); 
-      if (stockChartInstance) { 
-        stockChartInstance.destroy(); 
+      // Log which elements were found for debugging
+      console.log("Elements found:", {
+        companyForm,
+        loadingText,
+        resultsSection,
+        descriptionSection,
+        tickerSection,
+        stockPriceSection,
+        graphSection,
+        competitorsSection,
+        topCompetitorsSection
+      });
+      
+      // Check if necessary elements exist
+      if (!companyForm) {
+        console.error("Could not find element with id 'company-form'");
+        document.body.innerHTML = "<h1>Error: Required element 'company-form' not found</h1><p>Please check your HTML structure.</p>";
+        return;
       }
-      const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height); 
-      gradient.addColorStop(0, 'rgba(75, 192, 192, 0.6)'); 
-      gradient.addColorStop(1, 'rgba(75, 192, 192, 0)'); 
- 
-      stockChartInstance = new Chart(ctx, { 
-        type: 'line', 
-        data: { 
-          labels: timeLabels, 
-          datasets: [{ 
-            label: 'Stock Price', 
-            data: stockPrices, 
-            borderColor: 'rgba(75, 192, 192, 1)', 
+
+      let stockChartInstance = null;
+      let topCompetitorsChartInstance = null;
+
+      // Check authentication status quietly in the background
+      (async function checkAuth() {
+        try {
+          console.log("Checking authentication status...");
+          const response = await fetch('/test_auth');
+          const data = await response.json();
+          console.log("Authentication status:", data);
+          
+          if (!data.authenticated) {
+            console.warn("User is not authenticated - data fetching will require login");
+          }
+        } catch (error) {
+          console.error("Error checking authentication:", error);
+        }
+      })();
+
+      companyForm.addEventListener('submit', async (e) => { 
+        e.preventDefault(); 
+        const companyName = document.getElementById('companyName').value.trim(); 
+        if (!companyName) { 
+          alert('Enter a company name!'); 
+          return; 
+        } 
+
+        if (loadingText) {
+          loadingText.style.display = 'block';
+        }
+        console.log(`Fetching data for company: ${companyName}`);
+
+        try {
+          // Get the current hostname and use it for the API call
+          const apiUrl = window.location.origin;
+          const url = `${apiUrl}/analyze_company?company_name=${encodeURIComponent(companyName)}`;
+          console.log("Fetching from URL:", url);
+          
+          const response = await fetch(url); 
+          console.log("Response status:", response.status);
+          
+          // Try to parse as JSON first
+          let data;
+          const contentType = response.headers.get("content-type");
+          console.log("Response content type:", contentType);
+          
+          if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+            console.log("Response data:", data);
+          } else {
+            // Not JSON, probably HTML (like the login page)
+            const htmlContent = await response.text();
+            console.log("Received HTML response instead of JSON");
+            console.log("HTML content (first 100 chars):", htmlContent.substring(0, 100));
+            
+            // Check if it looks like a login redirect
+            if (htmlContent.includes("login") || htmlContent.includes("sign in")) {
+              alert("Please log in to use this feature");
+              window.location.href = "/access-account";
+              return;
+            } else {
+              throw new Error("Received HTML instead of JSON data");
+            }
+          }
+
+          if (data.success) { 
+            if (resultsSection) resultsSection.style.display = 'block';
+            if (descriptionSection) descriptionSection.style.display = 'block';
+            if (tickerSection) tickerSection.style.display = 'block';
+            if (stockPriceSection) stockPriceSection.style.display = 'block';
+            if (graphSection) graphSection.style.display = 'block';
+            if (competitorsSection) competitorsSection.style.display = 'block';
+
+            const descriptionElement = document.getElementById('description');
+            const tickerElement = document.getElementById('ticker');
+            const stockPriceElement = document.getElementById('stock-price');
+            const competitorsList = document.getElementById('competitorsList');
+            
+            if (descriptionElement) descriptionElement.textContent = data.description;
+            if (tickerElement) tickerElement.textContent = data.ticker;
+            if (stockPriceElement) stockPriceElement.textContent = `$${data.stock_prices[data.stock_prices.length - 1]}`;
+
+            if (competitorsList) {
+              competitorsList.textContent = ''; 
+              data.competitors.forEach((sector) => { 
+                competitorsList.textContent += `${sector.name}\n`; 
+                sector.competitors.forEach((competitor) => { 
+                  competitorsList.textContent += `\t${competitor}\n`; 
+                }); 
+                competitorsList.textContent += `\n`; 
+              });
+            }
+
+            renderGraph(data.stock_prices, data.time_labels); 
+
+            if (data.top_competitors && data.top_competitors.length > 0) { 
+              const topCompetitorsList = document.getElementById('topCompetitorsList'); 
+              if (topCompetitorsList) {
+                topCompetitorsList.innerHTML = '';
+                data.top_competitors.forEach((comp) => { 
+                  const div = document.createElement('div'); 
+                  div.textContent = `${comp.name} - Stock Price: $${comp.stock_price}`; 
+                  topCompetitorsList.appendChild(div); 
+                });
+              }
+
+              if (topCompetitorsSection) topCompetitorsSection.style.display = 'block';
+              renderTopCompetitorsGraph(data.top_competitors); 
+            } 
+          } else { 
+            console.error("Error from server:", data.error);
+            alert(data.error || 'Error fetching data.'); 
+          } 
+        } catch (error) { 
+          console.error('Fetch error:', error); 
+          alert('Error fetching data: ' + error.message); 
+        } finally { 
+          if (loadingText) {
+            loadingText.style.display = 'none';
+          }
+        } 
+      }); 
+
+      function renderGraph(stockPrices, timeLabels) { 
+        console.log("Rendering stock price graph");
+        const stockGraph = document.getElementById('stockGraph');
+        if (!stockGraph) {
+          console.error("Canvas 'stockGraph' not found");
+          return;
+        }
+        
+        const ctx = stockGraph.getContext('2d'); 
+        if (stockChartInstance) { 
+          stockChartInstance.destroy(); 
+        }
+        const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height); 
+        gradient.addColorStop(0, 'rgba(75, 192, 192, 0.6)'); 
+        gradient.addColorStop(1, 'rgba(75, 192, 192, 0)'); 
+
+        stockChartInstance = new Chart(ctx, { 
+          type: 'line', 
+          data: { 
+            labels: timeLabels, 
+            datasets: [{ 
+              label: 'Stock Price', 
+              data: stockPrices, 
+              borderColor: 'rgba(75, 192, 192, 1)', 
+              backgroundColor: gradient, 
+              fill: true, 
+              tension: 0.4, 
+            }], 
+          }, 
+          options: { 
+            responsive: true, 
+            plugins: { 
+              legend: { position: 'top' }, 
+            }, 
+            scales: { 
+              x: { title: { display: true, text: 'Time' } }, 
+              y: { title: { display: true, text: 'Stock Price (USD)' } }, 
+            }, 
+          }, 
+        }); 
+      } 
+
+      function renderTopCompetitorsGraph(topCompetitors) { 
+        console.log("Rendering top competitors graph");
+        const topCompGraph = document.getElementById('topCompetitorsGraph');
+        if (!topCompGraph) {
+          console.error("Canvas 'topCompetitorsGraph' not found");
+          return;
+        }
+        
+        const ctx = topCompGraph.getContext('2d'); 
+        if (topCompetitorsChartInstance) { 
+          topCompetitorsChartInstance.destroy(); 
+        }
+        const datasets = topCompetitors.map((comp, index) => { 
+          const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height); 
+          gradient.addColorStop(0, `hsl(${index * 120}, 70%, 50%)`); 
+          gradient.addColorStop(1, `rgba(${index * 40}, ${index * 60}, ${index * 80}, 0.1)`); 
+
+          // Use the actual stock prices from backend (should have variation)
+          return { 
+            label: comp.name, 
+            data: comp.stock_prices, 
+            borderColor: `hsl(${index * 120}, 70%, 50%)`, 
             backgroundColor: gradient, 
             fill: true, 
             tension: 0.4, 
-          }], 
-        }, 
-        options: { 
-          responsive: true, 
-          plugins: { 
-            legend: { position: 'top' }, 
+          }; 
+        }); 
+         
+        topCompetitorsChartInstance = new Chart(ctx, { 
+          type: 'line', 
+          data: { 
+            labels: topCompetitors[0].time_labels, 
+            datasets: datasets, 
           }, 
-          scales: { 
-            x: { title: { display: true, text: 'Time' } }, 
-            y: { title: { display: true, text: 'Stock Price (USD)' } }, 
+          options: { 
+            responsive: true, 
+            plugins: { 
+              legend: { position: 'top' }, 
+            }, 
+            scales: { 
+              x: { title: { display: true, text: 'Time' } }, 
+              y: { title: { display: true, text: 'Stock Price (USD)' } }, 
+            }, 
           }, 
-        }, 
-      }); 
-    } 
- 
-    function renderTopCompetitorsGraph(topCompetitors) { 
-      const ctx = document.getElementById('topCompetitorsGraph').getContext('2d'); 
-      if (topCompetitorsChartInstance) { 
-        topCompetitorsChartInstance.destroy(); 
+        }); 
       }
-      const datasets = topCompetitors.map((comp, index) => { 
-        const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height); 
-        gradient.addColorStop(0, `hsl(${index * 120}, 70%, 50%)`); 
-        gradient.addColorStop(1, `rgba(${index * 40}, ${index * 60}, ${index * 80}, 0.1)`); 
- 
-        // Use the actual stock prices from backend (should have variation)
-        return { 
-          label: comp.name, 
-          data: comp.stock_prices, 
-          borderColor: `hsl(${index * 120}, 70%, 50%)`, 
-          backgroundColor: gradient, 
-          fill: true, 
-          tension: 0.4, 
-        }; 
-      }); 
-       
-      topCompetitorsChartInstance = new Chart(ctx, { 
-        type: 'line', 
-        data: { 
-          labels: topCompetitors[0].time_labels, 
-          datasets: datasets, 
-        }, 
-        options: { 
-          responsive: true, 
-          plugins: { 
-            legend: { position: 'top' }, 
-          }, 
-          scales: { 
-            x: { title: { display: true, text: 'Time' } }, 
-            y: { title: { display: true, text: 'Stock Price (USD)' } }, 
-          }, 
-        }, 
-      }); 
-    } 
-  </script> 
+
+      // Debug tools disabled - only uncomment during development
+      /*
+      function addDebugTools() {
+        try {
+          const section = document.querySelector('.section');
+          if (!section) {
+            console.error("Could not find .section element to append debug tools");
+            return;
+          }
+          
+          const debugDiv = document.createElement('div');
+          debugDiv.style.marginTop = '20px';
+          debugDiv.style.padding = '10px';
+          debugDiv.style.border = '1px solid #ccc';
+          debugDiv.style.borderRadius = '5px';
+          debugDiv.style.backgroundColor = '#f8f8f8';
+          debugDiv.innerHTML = `
+            <h3>Debug Tools</h3>
+            <button id="test-auth">Test Authentication</button>
+            <button id="test-alpha-vantage">Test Alpha Vantage API</button>
+            <button id="test-gemini">Test Gemini API</button>
+            <div id="debug-result" style="margin-top: 10px; white-space: pre-wrap;"></div>
+          `;
+          
+          section.appendChild(debugDiv);
+          
+          document.getElementById('test-auth').addEventListener('click', async () => {
+            try {
+              const response = await fetch('/test_auth');
+              const data = await response.json();
+              document.getElementById('debug-result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+              document.getElementById('debug-result').textContent = `Error: ${error.message}`;
+            }
+          });
+          
+          document.getElementById('test-alpha-vantage').addEventListener('click', async () => {
+            try {
+              const response = await fetch('/test_alpha_vantage');
+              const data = await response.json();
+              document.getElementById('debug-result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+              document.getElementById('debug-result').textContent = `Error: ${error.message}`;
+            }
+          });
+          
+          document.getElementById('test-gemini').addEventListener('click', async () => {
+            try {
+              const response = await fetch('/test_gemini');
+              const data = await response.json();
+              document.getElementById('debug-result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+              document.getElementById('debug-result').textContent = `Error: ${error.message}`;
+            }
+          });
+          
+          console.log("Debug tools added successfully");
+        } catch (error) {
+          console.error("Error adding debug tools:", error);
+        }
+      }
+      
+      // Only add debug tools in development environment when specifically enabled
+      // Change this to true only during development
+      const enableDebugTools = false;
+      if (enableDebugTools && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        console.log('Adding debug tools');
+        addDebugTools();
+      }
+      */
+    });
+  </script>
 </body> 
 </html>
-
-  
-
- 
-
-    
-
-    

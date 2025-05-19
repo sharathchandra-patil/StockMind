@@ -3,19 +3,28 @@ import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import random
+from dotenv import load_dotenv
+import traceback
 
-#website owner will store their gmail application key 
-#in environemnt variable named EMPS and 
-#gmail address in env var named owner_email
+# Load environment variables
+load_dotenv()
+
+# Get email configuration from environment variables
+EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")  # Your email address for sending OTPs
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")  # Your app password for Gmail
+
 def generateOTP(username, usermail):
+    if not EMAIL_ADDRESS or not EMAIL_PASSWORD:
+        print("Email configuration missing. Check environment variables.")
+        print(f"EMAIL_ADDRESS: {EMAIL_ADDRESS}")
+        print(f"EMAIL_PASSWORD: {'**REDACTED**' if EMAIL_PASSWORD else 'Missing'}")
+        raise ValueError("Email configuration is missing. Please set EMAIL_ADDRESS and EMAIL_PASSWORD environment variables.")
+        
     smpt_server = 'smtp.gmail.com'
     smtp_port = 587
-    #change this
-    provider = os.getenv("<enter your environment variable storing the email address>")
-    #change this
-    emps = os.getenv('<enter the env variable storing the gmail app pasword>')
+    
     msg = MIMEMultipart()
-    otp = random.randint(100000,999999)
+    otp = random.randint(100000, 999999)
     btn = f"""
     <html>
     <head>
@@ -76,24 +85,42 @@ def generateOTP(username, usermail):
     </html>
     """
 
-    msg['From'] = provider
+    msg['From'] = EMAIL_ADDRESS
     msg['To'] = usermail
     msg['Subject'] = "Your OTP for StockMind is here"
-    msg['Reply-To'] = provider 
+    msg['Reply-To'] = EMAIL_ADDRESS
     msg['X-Mailer'] = 'Python-Mail'
     msg.attach(MIMEText(btn, 'html'))
 
-    s = smt.SMTP(smpt_server,smtp_port)
+    # Debug email settings
+    print(f"SMTP Server: {smpt_server}")
+    print(f"SMTP Port: {smtp_port}")
+    print(f"From Email: {EMAIL_ADDRESS}")
+    print(f"To Email: {usermail}")
+
+    s = smt.SMTP(smpt_server, smtp_port)
     try:
         s.starttls()
-        s.login(provider,emps)
-        s.sendmail(provider, usermail, msg.as_string())
+        print("SMTP TLS established")
+        s.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        print("SMTP Login successful")
+        s.sendmail(EMAIL_ADDRESS, usermail, msg.as_string())
+        print(f"Email sent successfully to {usermail}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        traceback.print_exc()
+        raise
     finally:    
         s.quit()
     return otp
 
-def verifyOTP(otp,inp):
+def verifyOTP(otp, inp):
+    print(f"Verifying OTP - Expected: {otp}, Received: {inp}")
     otp = str(otp)
     inp = str(inp)
-    if(otp==inp):return True
-    else: return False
+    if(otp == inp):
+        print("OTP verification successful")
+        return True
+    else: 
+        print("OTP verification failed")
+        return False
