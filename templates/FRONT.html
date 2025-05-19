@@ -22,7 +22,8 @@
   {% endif %}
   {% endwith %}
 
- <header>
+ 
+  <header>
   <div class="top-header">
     <div class="logo">StockMind</div>
     <div class="tagline">AI-Driven Equity Analysis</div>
@@ -41,222 +42,223 @@
   </div>
 </header>
 
-  <section class="hero"> 
-    <div class="hero-content"> 
-      <h3>AI-Driven Equity Clustering</h3> 
-      <p>Identify comparable peer companies using Large Language Models (LLMs) for precise equity valuation.</p> 
-    </div> 
-  </section> 
- 
-  <section id="input" class="section"> 
-    <h2>Analyze a Company</h2> 
-    <form id="company-form"> 
-      <input type="text" id="companyName" placeholder="Enter Company Name..." required> 
-      <button type="submit">Analyze</button> 
-      <p id="loading" style="display: none;">Processing... Please wait.</p> 
-    </form> 
-  </section> 
- 
-  <section id="results" class="section" style="display: none;"> 
-    <h2>Results</h2> 
-    <div id="descriptionSection" style="display: none;"> 
-      <h3>Company Description</h3> 
-      <div class="description" id="description"></div> 
-    </div> 
-    <div id="tickerSection" style="display: none;"> 
-      <h3>Ticker</h3> 
-      <div class="ticker" id="ticker"></div> 
-    </div> 
-    <div id="stockPriceSection" style="display: none;"> 
-      <h3>Present Stock Price</h3> 
-      <div class="stock-price" id="stock-price"></div> 
-    </div> 
-    <div id="graphSection" style="display: none;"> 
-      <h3>Graphical Representation</h3> 
-      <canvas id="stockGraph" width="800" height="400"></canvas> 
-    </div> 
-    <div id="competitorsSection" class="competitors-section" style="display: none;"> 
-      <h3>Peer Competitors</h3> 
-      <pre id="competitorsList" class="competitors-list"></pre> 
-    </div> 
-    <div id="topCompetitorsSection" class="section" style="display: none;"> 
-      <h2>Top 3 Peer Competitors by Market Evaluation</h2> 
-      <div id="topCompetitorsList" class="top-competitors-list"></div> 
-      <h3>Combined Stock Price Graph for Top 3 Competitors</h3> 
-      <canvas id="topCompetitorsGraph" width="800" height="400"></canvas> 
-    </div> 
-  </section> 
- 
-  <footer> 
-    <p>&copy; 2024 StockMind AI. All Rights Reserved.</p> 
-    <div class="social-icons"> 
-      <a href="#"><i class="fab fa-facebook"></i></a> 
-      <a href="#"><i class="fab fa-twitter"></i></a> 
-      <a href="#"><i class="fab fa-linkedin"></i></a> 
-    </div> 
-  </footer> 
- 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
-  <script> 
-    const companyForm = document.getElementById('company-form'); 
-    const loadingText = document.getElementById('loading'); 
-    const resultsSection = document.getElementById('results'); 
-    const descriptionSection = document.getElementById('descriptionSection'); 
-    const tickerSection = document.getElementById('tickerSection'); 
-    const stockPriceSection = document.getElementById('stockPriceSection'); 
-    const graphSection = document.getElementById('graphSection'); 
-    const competitorsSection = document.getElementById('competitorsSection'); 
-    const topCompetitorsSection = document.getElementById('topCompetitorsSection'); 
+  <section class="hero">
+    <div class="hero-content">
+      <h3>AI-Driven Equity Clustering</h3>
+      <p>Identify comparable peer companies using Large Language Models (LLMs) for precise equity valuation.</p>
+    </div>
+  </section>
 
-    let stockChartInstance = null;
-    let topCompetitorsChartInstance = null;
- 
-    companyForm.addEventListener('submit', async (e) => { 
-      e.preventDefault(); 
-      const companyName = document.getElementById('companyName').value.trim(); 
-      if (!companyName) { 
-        alert('Enter a company name!'); 
-        return; 
-      } 
- 
-      loadingText.style.display = 'block'; 
- 
+  <section id="input" class="section">
+    <h2>Analyze a Company</h2>
+    <form id="company-form">
+      <input type="text" id="companyName" placeholder="Enter Company Name..." required>
+      <button type="submit">Analyze</button>
+      <p id="loading" style="display: none;">Processing... Please wait.</p>
+    </form>
+  </section>
+
+  <section id="results" class="section" style="display: none;">
+    <h2>Results</h2>
+    <div id="descriptionSection" style="display: none;">
+      <h3>Company Description</h3>
+      <div class="description" id="description"></div>
+    </div>
+    <div id="tickerSection" style="display: none;">
+      <h3>Ticker</h3>
+      <div class="ticker" id="ticker"></div>
+    </div>
+    <div id="stockPriceSection" style="display: none;">
+      <h3>Present Stock Price</h3>
+      <div class="stock-price" id="stock-price"></div>
+    </div>
+    <div id="graphSection" style="display: none;">
+      <h3>Graphical Representation</h3>
+      <canvas id="stockGraph" width="800" height="400"></canvas>
+    </div>
+    <div id="competitorsSection" class="competitors-section" style="display: none;">
+      <h3>Peer Competitors</h3>
+      <pre id="competitorsList" class="competitors-list"></pre>
+    </div>
+    <div id="topCompetitorsSection" class="section" style="display: none;">
+      <h2>Top 3 Peer Competitors by Market Evaluation</h2>
+      <div id="topCompetitorsList" class="top-competitors-list"></div>
+      <h3>Combined Stock Price Graph for Top 3 Competitors</h3>
+      <canvas id="topCompetitorsGraph" width="800" height="400"></canvas>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2024 StockMind AI. All Rights Reserved.</p>
+    <div class="social-icons">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-linkedin"></i></a>
+    </div>
+  </footer>
+  {% if error %}
+  <script>
+    alert("{{error}}");
+  </script>
+  {% endif %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const companyForm = document.getElementById('company-form');
+    const loadingText = document.getElementById('loading');
+    const resultsSection = document.getElementById('results');
+    const descriptionSection = document.getElementById('descriptionSection');
+    const tickerSection = document.getElementById('tickerSection');
+    const stockPriceSection = document.getElementById('stockPriceSection');
+    const graphSection = document.getElementById('graphSection');
+    const competitorsSection = document.getElementById('competitorsSection');
+    const topCompetitorsSection = document.getElementById('topCompetitorsSection');
+
+    companyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const companyName = document.getElementById('companyName').value.trim();
+      if (!companyName) {
+        alert('Enter a company name!');
+        return;
+      }
+
+      loadingText.style.display = 'block';
+
       try {
-        // Get the current hostname and use it for the API call
-        const apiUrl = window.location.origin;
-        const response = await fetch(`${apiUrl}/analyze_company?company_name=${encodeURIComponent(companyName)}`); 
-        const data = await response.json(); 
- 
-        if (data.success) { 
-          resultsSection.style.display = 'block'; 
-          descriptionSection.style.display = 'block'; 
-          tickerSection.style.display = 'block'; 
-          stockPriceSection.style.display = 'block'; 
-          graphSection.style.display = 'block'; 
-          competitorsSection.style.display = 'block'; 
- 
-          document.getElementById('description').textContent = data.description; 
-          document.getElementById('ticker').textContent = data.ticker; 
-          document.getElementById('stock-price').textContent = `$${data.stock_prices[data.stock_prices.length - 1]}`; 
- 
-          const competitorsList = document.getElementById('competitorsList'); 
-          competitorsList.textContent = ''; 
-          data.competitors.forEach((sector) => { 
-            competitorsList.textContent += `${sector.name}\n`; 
-            sector.competitors.forEach((competitor) => { 
-              competitorsList.textContent += `\t${competitor}\n`; 
-            }); 
-            competitorsList.textContent += `\n`; 
-          }); 
- 
-          renderGraph(data.stock_prices, data.time_labels); 
- 
-          if (data.top_competitors.length > 0) { 
-            const topCompetitorsList = document.getElementById('topCompetitorsList'); 
-            topCompetitorsList.innerHTML = ''; 
- 
-            data.top_competitors.forEach((comp) => { 
-              const div = document.createElement('div'); 
-              div.textContent = `${comp.name} - Stock Price: $${comp.stock_price}`; 
-              topCompetitorsList.appendChild(div); 
-            }); 
- 
-            topCompetitorsSection.style.display = 'block'; 
-            renderTopCompetitorsGraph(data.top_competitors); 
-          } 
-        } else { 
-          alert(data.error || 'Error fetching data.'); 
-        } 
-      } catch (error) { 
-        console.error('Error:', error); 
-        alert('Error fetching data.'); 
-      } finally { 
-        loadingText.style.display = 'none'; 
-      } 
-    }); 
- 
-    function renderGraph(stockPrices, timeLabels) { 
-      const ctx = document.getElementById('stockGraph').getContext('2d'); 
-      if (stockChartInstance) { 
-        stockChartInstance.destroy(); 
+        const response = await fetch(`/analyze_company?company_name=${encodeURIComponent(companyName)}`);
+        const data = await response.json();
+
+        if (data.success) {
+          resultsSection.style.display = 'block';
+          descriptionSection.style.display = 'block';
+          tickerSection.style.display = 'block';
+          stockPriceSection.style.display = 'block';
+          graphSection.style.display = 'block';
+          competitorsSection.style.display = 'block';
+
+          document.getElementById('description').textContent = data.description;
+          document.getElementById('ticker').textContent = data.ticker;
+          document.getElementById('stock-price').textContent = `$${data.stock_prices[data.stock_prices.length - 1]}`;
+
+          const competitorsList = document.getElementById('competitorsList');
+          competitorsList.textContent = '';
+          data.competitors.forEach((sector) => {
+            competitorsList.textContent += `${sector.name}\n`;
+            sector.competitors.forEach((competitor) => {
+              competitorsList.textContent += `\t${competitor}\n`;
+            });
+            competitorsList.textContent += `\n`;
+          });
+
+          renderGraph(data.stock_prices, data.time_labels);
+
+          if (data.top_competitors.length > 0) {
+            const topCompetitorsList = document.getElementById('topCompetitorsList');
+            topCompetitorsList.innerHTML = '';
+
+            data.top_competitors.forEach((comp) => {
+              const div = document.createElement('div');
+              div.textContent = `${comp.name} - Stock Price: $${comp.stock_price}`;
+              topCompetitorsList.appendChild(div);
+            });
+
+            topCompetitorsSection.style.display = 'block';
+            renderTopCompetitorsGraph(data.top_competitors);
+          }
+        } else {
+          alert(data.error || 'Error fetching data.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error fetching data.');
+      } finally {
+        loadingText.style.display = 'none';
       }
-      const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height); 
-      gradient.addColorStop(0, 'rgba(75, 192, 192, 0.6)'); 
-      gradient.addColorStop(1, 'rgba(75, 192, 192, 0)'); 
- 
-      stockChartInstance = new Chart(ctx, { 
-        type: 'line', 
-        data: { 
-          labels: timeLabels, 
-          datasets: [{ 
-            label: 'Stock Price', 
-            data: stockPrices, 
-            borderColor: 'rgba(75, 192, 192, 1)', 
-            backgroundColor: gradient, 
-            fill: true, 
-            tension: 0.4, 
-          }], 
-        }, 
-        options: { 
-          responsive: true, 
-          plugins: { 
-            legend: { position: 'top' }, 
-          }, 
-          scales: { 
-            x: { title: { display: true, text: 'Time' } }, 
-            y: { title: { display: true, text: 'Stock Price (USD)' } }, 
-          }, 
-        }, 
-      }); 
+    });
+
+    function renderGraph(stockPrices, timeLabels) {
+      const ctx = document.getElementById('stockGraph').getContext('2d');
+      const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+      gradient.addColorStop(0, 'rgba(75, 192, 192, 0.6)');
+      gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: timeLabels,
+          datasets: [{
+            label: 'Stock Price',
+            data: stockPrices,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.4,
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+          },
+          scales: {
+            x: { title: { display: true, text: 'Time' } },
+            y: { title: { display: true, text: 'Stock Price (USD)' } },
+          },
+        },
+      });
+    }
+
+    function renderTopCompetitorsGraph(topCompetitors) {
+      const ctx = document.getElementById('topCompetitorsGraph').getContext('2d');
+      const datasets = topCompetitors.map((comp, index) => {
+        const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+        gradient.addColorStop(0, `hsl(${index * 120}, 70%, 50%)`);
+        gradient.addColorStop(1, `rgba(${index * 40}, ${index * 60}, ${index * 80}, 0.1)`);
+
+        return {
+          label: comp.name,
+          data: comp.stock_prices,
+          borderColor: `hsl(${index * 120}, 70%, 50%)`,
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.4,
+        };
+      });
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: topCompetitors[0].time_labels,
+          datasets: datasets,
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+          },
+          scales: {
+            x: { title: { display: true, text: 'Time' } },
+            y: { title: { display: true, text: 'Stock Price (USD)' } },
+          },
+        },
+      });
     } 
- 
-    function renderTopCompetitorsGraph(topCompetitors) { 
-      const ctx = document.getElementById('topCompetitorsGraph').getContext('2d'); 
-      if (topCompetitorsChartInstance) { 
-        topCompetitorsChartInstance.destroy(); 
+  </script>
+
+
+  <script>
+    // Wait for the page to fully load
+    document.addEventListener('DOMContentLoaded', function () {
+      // Check if there's a flash message from Flask
+      const flashMessage = "{{ get_flashed_messages()[0] if get_flashed_messages() else '' }}";
+
+      // If there's a message, show it as an alert
+      if (flashMessage && flashMessage.trim() !== '') {
+        alert(flashMessage);
       }
-      const datasets = topCompetitors.map((comp, index) => { 
-        const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height); 
-        gradient.addColorStop(0, `hsl(${index * 120}, 70%, 50%)`); 
-        gradient.addColorStop(1, `rgba(${index * 40}, ${index * 60}, ${index * 80}, 0.1)`); 
- 
-        // Use the actual stock prices from backend (should have variation)
-        return { 
-          label: comp.name, 
-          data: comp.stock_prices, 
-          borderColor: `hsl(${index * 120}, 70%, 50%)`, 
-          backgroundColor: gradient, 
-          fill: true, 
-          tension: 0.4, 
-        }; 
-      }); 
-       
-      topCompetitorsChartInstance = new Chart(ctx, { 
-        type: 'line', 
-        data: { 
-          labels: topCompetitors[0].time_labels, 
-          datasets: datasets, 
-        }, 
-        options: { 
-          responsive: true, 
-          plugins: { 
-            legend: { position: 'top' }, 
-          }, 
-          scales: { 
-            x: { title: { display: true, text: 'Time' } }, 
-            y: { title: { display: true, text: 'Stock Price (USD)' } }, 
-          }, 
-        }, 
-      }); 
-    } 
-  </script> 
-</body> 
+    });
+  </script>
+
+
+</body>
+
 </html>
-
-  
-
- 
-
-    
-
-    
