@@ -102,12 +102,12 @@ def fetch_wikipedia_summary(company_name):
         return None, f"Error fetching Wikipedia summary: {str(e)}" 
     return None, "No Wikipedia page found for the given company." 
  
-def fetch_stock_price(ticker): 
+def fetch_stock_price(ticker, time_range="3mo"): 
     try: 
         # Set a timeout for the request
         stock = yf.Ticker(ticker)
-        # Use a longer period (3mo instead of 1mo) for more detailed response
-        history = stock.history(period="3mo")
+        # Use the provided time range
+        history = stock.history(period=time_range)
         
         if history.empty:
             print(f"No stock price data found for {ticker}")
@@ -115,9 +115,17 @@ def fetch_stock_price(ticker):
             import datetime
             import random
             today = datetime.datetime.now()
-            time_labels = [(today - datetime.timedelta(days=i)).strftime('%Y-%m-%d') for i in range(90, 0, -1)]
+            
+            # Adjust the number of days based on time range
+            days = {
+                "1wk": 7,
+                "1mo": 30,
+                "3mo": 90
+            }.get(time_range, 90)
+            
+            time_labels = [(today - datetime.timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days, 0, -1)]
             base_price = 100.0
-            stock_prices = [round(base_price + random.uniform(-10, 10), 2) for _ in range(90)]
+            stock_prices = [round(base_price + random.uniform(-10, 10), 2) for _ in range(days)]
             return stock_prices, time_labels
             
         time_labels = history.index.strftime('%Y-%m-%d').tolist() 
@@ -129,9 +137,17 @@ def fetch_stock_price(ticker):
         import datetime
         import random
         today = datetime.datetime.now()
-        time_labels = [(today - datetime.timedelta(days=i)).strftime('%Y-%m-%d') for i in range(90, 0, -1)]
+        
+        # Adjust the number of days based on time range
+        days = {
+            "1wk": 7,
+            "1mo": 30,
+            "3mo": 90
+        }.get(time_range, 90)
+        
+        time_labels = [(today - datetime.timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days, 0, -1)]
         base_price = 100.0
-        stock_prices = [round(base_price + random.uniform(-10, 10), 2) for _ in range(90)]
+        stock_prices = [round(base_price + random.uniform(-10, 10), 2) for _ in range(days)]
         return stock_prices, time_labels
 
 def get_ticker_from_alpha_vantage(company_name): 
@@ -267,7 +283,7 @@ def get_top_competitors(competitors):
     top_competitors = sorted(competitor_data, key=lambda x: x["market_cap"], reverse=True)[:3] 
     return top_competitors 
  
-def query_gemini_llm(description): 
+def query_gemini_llm(company_name): 
     try: 
         # Check if client is defined (it might not be if API key is invalid)
         if 'client' not in globals():
@@ -285,15 +301,16 @@ def query_gemini_llm(description):
             ]
             
         prompt = f""" 
-        Provide a structured list of sectors and their competitors for the following company description: 
-        {description[:500]} 
+        Based on the company name "{company_name}", provide a structured list of sectors and their main competitors.
+        Focus on direct competitors in the same industry and market.
         Format: 
         Sector Name : 
             Competitor 1 
             Competitor 2 
             Competitor 3 
  
-        Leave a line after each sector. Do not use bullet points. 
+        Leave a line after each sector. Do not use bullet points.
+        Only include major, publicly traded companies that are direct competitors.
         """ 
         
         try:
@@ -342,6 +359,8 @@ def query_gemini_llm(description):
 @login_required
 def analyze_company():
     company_name = request.args.get("company_name")
+    time_range = request.args.get("time_range", "3mo")  # Default to 3 months if not specified
+    
     if not company_name:
         return jsonify(success=False, error="No company name provided.")
 
@@ -353,16 +372,22 @@ def analyze_company():
     if not ticker:  
         return jsonify(success=False, error="Could not find ticker symbol.")
 
-    stock_prices, time_labels = fetch_stock_price(ticker)
+    stock_prices, time_labels = fetch_stock_price(ticker, time_range)
     if not stock_prices or not time_labels:
         return jsonify(success=False, error="Could not fetch stock prices.")
 
-    competitors = query_gemini_llm(summary)
-    if not competitors:
-        competitors = [{"name": "No Sectors", "competitors": ["No competitors found."]}]
+    # Only fetch competitors if this is the initial request (not a time range update)
+    if time_range == "3mo":
+        competitors = query_gemini_llm(company_name)  # Changed to pass company_name instead of summary
+        if not competitors:
+            competitors = [{"name": "No Sectors", "competitors": ["No competitors found."]}]
 
-    all_competitors = [comp for sector in competitors for comp in sector["competitors"]]
-    top_competitors = get_top_competitors(all_competitors)
+        all_competitors = [comp for sector in competitors for comp in sector["competitors"]]
+        top_competitors = get_top_competitors(all_competitors)
+    else:
+        # For time range updates, we don't need to fetch competitors again
+        competitors = []
+        top_competitors = []
 
     return jsonify(
         success=True,

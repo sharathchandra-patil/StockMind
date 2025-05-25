@@ -90,6 +90,11 @@
 
         <div id="graphSection" class="result-card chart-card" style="display: none;">
           <h3><i class="fas fa-chart-line"></i> Stock Price History</h3>
+          <div class="time-range-selector">
+            <button class="time-range-btn active" data-range="3mo">3 Months</button>
+            <button class="time-range-btn" data-range="1mo">1 Month</button>
+            <button class="time-range-btn" data-range="1wk">1 Week</button>
+          </div>
           <canvas id="stockGraph"></canvas>
         </div>
 
@@ -137,6 +142,7 @@
 
     let stockChartInstance = null;
     let topCompetitorsChartInstance = null;
+    let currentTicker = null;
 
     // Function to animate section reveal
     function revealSection(sectionElement) {
@@ -147,6 +153,26 @@
         }, 50); // A small delay
     }
 
+    // Add this function to handle time range changes
+    function updateTimeRange(range) {
+      if (!currentTicker) return;
+      
+      loadingText.style.display = 'block';
+      fetch(`/service/analyze_company?company_name=${currentTicker}&time_range=${range}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            renderGraph(data.stock_prices, data.time_labels);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error updating time range. Please try again.');
+        })
+        .finally(() => {
+          loadingText.style.display = 'none';
+        });
+    }
 
     companyForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -157,11 +183,12 @@
         return;
       }
 
+      currentTicker = companyName;
+
       loadingText.style.display = 'flex'; // Changed to flex for spinner alignment
       resultsSection.style.display = 'none'; // Hide previous results
       // Remove 'visible' class from all result cards for re-animation
       document.querySelectorAll('.result-card, .results-section').forEach(el => el.classList.remove('visible'));
-
 
       try {
         const apiUrl = window.location.origin;
@@ -198,7 +225,6 @@
             competitorsSection.style.display = 'none';
           }
 
-
           if (data.top_competitors && data.top_competitors.length > 0) {
             const topCompetitorsListEl = document.getElementById('topCompetitorsList');
             topCompetitorsListEl.innerHTML = ''; // Clear previous
@@ -214,11 +240,9 @@
             });
             renderTopCompetitorsGraph(data.top_competitors);
             revealSection(topCompetitorsSection);
-
           } else {
             topCompetitorsSection.style.display = 'none';
           }
-
         } else {
           // Implement a more user-friendly error display
           alert(data.error || 'Error fetching data. Please try again.');
@@ -248,13 +272,40 @@
                 }
             },
             tooltip: {
-                backgroundColor: 'rgba(0,0,0,0.7)',
-                titleFont: { family: "'Poppins', sans-serif", size: 14 },
-                bodyFont: { family: "'Poppins', sans-serif", size: 12 },
-                padding: 10,
-                cornerRadius: 4,
-                displayColors: true
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleFont: { family: "'Poppins', sans-serif", size: 14, weight: 'bold' },
+                bodyFont: { family: "'Poppins', sans-serif", size: 13 },
+                padding: 12,
+                cornerRadius: 6,
+                displayColors: true,
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'USD',
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(context.parsed.y);
+                        }
+                        return label;
+                    },
+                    title: function(context) {
+                        return context[0].label;
+                    }
+                },
+                intersect: false,
+                mode: 'index'
             }
+        },
+        interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
         },
         scales: {
             x: {
@@ -297,7 +348,9 @@
             pointBackgroundColor: '#007bff',
             pointBorderColor: '#ffffff',
             pointHoverBackgroundColor: '#ffffff',
-            pointHoverBorderColor: '#0056b3'
+            pointHoverBorderColor: '#0056b3',
+            pointRadius: 4,  // Increased from default
+            pointHoverRadius: 6  // Increased from default
           }],
         },
         options: chartDefaultOptions
@@ -329,7 +382,7 @@
 
         return {
           label: comp.name,
-          data: comp.stock_prices, // Assuming each competitor has its own stock_prices array
+          data: comp.stock_prices,
           borderColor: baseColor,
           backgroundColor: gradient,
           fill: true,
@@ -337,7 +390,9 @@
           pointBackgroundColor: baseColor,
           pointBorderColor: '#ffffff',
           pointHoverBackgroundColor: '#ffffff',
-          pointHoverBorderColor: hexToRgba(baseColor, 0.8)
+          pointHoverBorderColor: hexToRgba(baseColor, 0.8),
+          pointRadius: 4,  // Increased from default
+          pointHoverRadius: 6  // Increased from default
         };
       });
       
@@ -351,6 +406,54 @@
         options: chartDefaultOptions
       });
     }
+
+    // Add event listeners for time range buttons
+    document.querySelectorAll('.time-range-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+        // Remove active class from all buttons
+        document.querySelectorAll('.time-range-btn').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        // Add active class to clicked button
+        e.target.classList.add('active');
+        // Update the graph with new time range
+        updateTimeRange(e.target.dataset.range);
+      });
+    });
   </script>
+
+  <style>
+    .time-range-selector {
+      display: flex;
+      gap: 15px;  /* Increased gap between buttons */
+      margin-bottom: 20px;  /* Increased bottom margin */
+      justify-content: center;
+    }
+
+    .time-range-btn {
+      padding: 12px 24px;  /* Increased padding */
+      border: 1px solid var(--border-color);
+      background-color: var(--surface-color);
+      color: var(--text-primary-color);
+      border-radius: var(--border-radius-sm);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1.1rem;  /* Increased font size */
+      font-weight: 500;  /* Added medium font weight */
+      min-width: 120px;  /* Added minimum width */
+    }
+
+    .time-range-btn:hover {
+      background-color: var(--surface-highlight);
+      transform: translateY(-2px);  /* Added slight lift effect on hover */
+    }
+
+    .time-range-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      font-weight: 600;  /* Made active button text bolder */
+    }
+  </style>
 </body>
 </html>
