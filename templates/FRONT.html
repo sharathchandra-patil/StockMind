@@ -240,116 +240,219 @@
             legend: { 
                 position: 'top',
                 labels: {
-                    color: '#e0e0e0', // Light color for legend text
+                    color: '#A1A1AA',
                     font: {
                         family: "'Poppins', sans-serif",
-                        size: 13
-                    }
+                        size: 13,
+                        weight: '500'
+                    },
+                    padding: 20,
+                    usePointStyle: true,
+                    pointStyle: 'circle'
                 }
             },
             tooltip: {
-                backgroundColor: 'rgba(0,0,0,0.7)',
-                titleFont: { family: "'Poppins', sans-serif", size: 14 },
-                bodyFont: { family: "'Poppins', sans-serif", size: 12 },
-                padding: 10,
-                cornerRadius: 4,
-                displayColors: true
+                backgroundColor: 'rgba(17, 17, 17, 0.95)',
+                titleFont: {
+                    family: "'Poppins', sans-serif",
+                    size: 14,
+                    weight: '600'
+                },
+                bodyFont: {
+                    family: "'Poppins', sans-serif",
+                    size: 13
+                },
+                padding: 12,
+                cornerRadius: 8,
+                displayColors: true,
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1,
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'USD',
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(context.parsed.y);
+                        }
+                        return label;
+                    }
+                },
+                animation: {
+                    duration: 200
+                }
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        },
+        animation: {
+            duration: 1500,
+            easing: 'easeInOutQuart',
+            onProgress: function(animation) {
+                const progress = animation.currentStep / animation.numSteps;
+                const ctx = animation.chart.ctx;
+                const chartArea = animation.chart.chartArea;
+                
+                // Add subtle gradient animation during chart load
+                const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
+                gradient.addColorStop(progress, 'rgba(99, 102, 241, 0.2)');
+                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.1)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
             }
         },
         scales: {
             x: {
-                title: { display: true, text: 'Time', color: '#c0c0c0', font: { family: "'Poppins', sans-serif", size: 14, weight: '500'} },
-                ticks: { color: '#a0a0a0', font: { family: "'Poppins', sans-serif"} },
-                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.05)',
+                    drawBorder: false,
+                    drawTicks: false
+                },
+                ticks: {
+                    color: '#A1A1AA',
+                    font: {
+                        family: "'Poppins', sans-serif",
+                        size: 12
+                    },
+                    maxRotation: 45,
+                    minRotation: 45,
+                    padding: 10
+                }
             },
             y: {
-                title: { display: true, text: 'Stock Price (USD)', color: '#c0c0c0', font: { family: "'Poppins', sans-serif", size: 14, weight: '500'}},
-                ticks: { color: '#a0a0a0', font: { family: "'Poppins', sans-serif"}, callback: function(value) { return '$' + value; } },
-                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.05)',
+                    drawBorder: false,
+                    drawTicks: false
+                },
+                ticks: {
+                    color: '#A1A1AA',
+                    font: {
+                        family: "'Poppins', sans-serif",
+                        size: 12
+                    },
+                    padding: 10,
+                    callback: function(value) {
+                        return new Intl.NumberFormat('en-US', { 
+                            style: 'currency', 
+                            currency: 'USD', 
+                            minimumFractionDigits: 0, 
+                            maximumFractionDigits: 0 
+                        }).format(value);
+                    }
+                }
             }
         },
-        animation: {
-            duration: 1000,
-            easing: 'easeInOutQuad'
+        elements: {
+            line: {
+                tension: 0.4
+            },
+            point: {
+                radius: 0,
+                hitRadius: 10,
+                hoverRadius: 6,
+                hoverBorderWidth: 2
+            }
         }
     };
 
     function renderGraph(stockPrices, timeLabels) {
-      const ctx = document.getElementById('stockGraph').getContext('2d');
-      if (stockChartInstance) {
-        stockChartInstance.destroy();
-      }
-      const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.clientHeight);
-      gradient.addColorStop(0, 'rgba(0, 123, 255, 0.5)'); // Primary color start
-      gradient.addColorStop(1, 'rgba(0, 123, 255, 0)');   // Primary color end (transparent)
-
-      stockChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: timeLabels,
-          datasets: [{
-            label: 'Stock Price',
-            data: stockPrices,
-            borderColor: '#007bff', // Primary color solid
-            backgroundColor: gradient,
-            fill: true,
-            tension: 0.3,
-            pointBackgroundColor: '#007bff',
-            pointBorderColor: '#ffffff',
-            pointHoverBackgroundColor: '#ffffff',
-            pointHoverBorderColor: '#0056b3'
-          }],
-        },
-        options: chartDefaultOptions
-      });
+        const ctx = document.getElementById('stockGraph').getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (stockChartInstance) {
+            stockChartInstance.destroy();
+        }
+        
+        // Create gradient for the line
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+        
+        stockChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Stock Price',
+                    data: stockPrices,
+                    borderColor: '#6366F1',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#6366F1',
+                    pointHoverBorderColor: '#FFFFFF',
+                    pointHoverBorderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                ...chartDefaultOptions,
+                plugins: {
+                    ...chartDefaultOptions.plugins,
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
     }
 
-    function renderTopCompetitorsGraph(topCompetitors) {
-      const ctx = document.getElementById('topCompetitorsGraph').getContext('2d');
-      if (topCompetitorsChartInstance) {
-        topCompetitorsChartInstance.destroy();
-      }
-
-      const colorPalette = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8']; // Blue, Green, Yellow
-
-      const datasets = topCompetitors.map((comp, index) => {
-        const baseColor = colorPalette[index % colorPalette.length];
-        const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.clientHeight);
+    function renderTopCompetitorsGraph(competitors) {
+        const ctx = document.getElementById('topCompetitorsGraph').getContext('2d');
         
-        // Helper to convert hex to rgba
-        const hexToRgba = (hex, alpha) => {
-            const r = parseInt(hex.slice(1, 3), 16);
-            const g = parseInt(hex.slice(3, 5), 16);
-            const b = parseInt(hex.slice(5, 7), 16);
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        };
-
-        gradient.addColorStop(0, hexToRgba(baseColor, 0.6));
-        gradient.addColorStop(1, hexToRgba(baseColor, 0));
-
-        return {
-          label: comp.name,
-          data: comp.stock_prices, // Assuming each competitor has its own stock_prices array
-          borderColor: baseColor,
-          backgroundColor: gradient,
-          fill: true,
-          tension: 0.3,
-          pointBackgroundColor: baseColor,
-          pointBorderColor: '#ffffff',
-          pointHoverBackgroundColor: '#ffffff',
-          pointHoverBorderColor: hexToRgba(baseColor, 0.8)
-        };
-      });
-      
-      topCompetitorsChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          // Assuming all competitors share the same time labels from the first one
-          labels: topCompetitors.length > 0 ? topCompetitors[0].time_labels : [],
-          datasets: datasets,
-        },
-        options: chartDefaultOptions
-      });
+        // Destroy existing chart if it exists
+        if (topCompetitorsChartInstance) {
+            topCompetitorsChartInstance.destroy();
+        }
+        
+        const colors = [
+            { border: '#6366F1', background: 'rgba(99, 102, 241, 0.1)' },  // Indigo
+            { border: '#10B981', background: 'rgba(16, 185, 129, 0.1)' },  // Emerald
+            { border: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)' }   // Amber
+        ];
+        
+        const datasets = competitors.map((comp, index) => {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, colors[index].background);
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            return {
+                label: comp.name,
+                data: comp.stock_prices,
+                borderColor: colors[index].border,
+                backgroundColor: gradient,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: colors[index].border,
+                pointHoverBorderColor: '#FFFFFF',
+                pointHoverBorderWidth: 2,
+                tension: 0.4,
+                fill: true
+            };
+        });
+        
+        topCompetitorsChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: competitors[0].time_labels,
+                datasets: datasets
+            },
+            options: chartDefaultOptions
+        });
     }
   </script>
 </body>
