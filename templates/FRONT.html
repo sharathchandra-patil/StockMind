@@ -264,11 +264,15 @@
             legend: { 
                 position: 'top',
                 labels: {
-                    color: '#e0e0e0', // Light color for legend text
+                    color: '#A1A1AA',
                     font: {
                         family: "'Poppins', sans-serif",
-                        size: 13
-                    }
+                        size: 13,
+                        weight: '500'
+                    },
+                    padding: 20,
+                    usePointStyle: true,
+                    pointStyle: 'circle'
                 }
             },
             tooltip: {
@@ -302,10 +306,10 @@
                             }).format(context.parsed.y);
                         }
                         return label;
-                    },
-                    title: function(context) {
-                        return context[0].label;
                     }
+                },
+                animation: {
+                    duration: 200
                 }
             }
         },
@@ -314,7 +318,22 @@
             mode: 'index'
         },
         animation: {
-            duration: 200
+            duration: 1500,
+            easing: 'easeInOutQuart',
+            onProgress: function(animation) {
+                const progress = animation.currentStep / animation.numSteps;
+                const ctx = animation.chart.ctx;
+                const chartArea = animation.chart.chartArea;
+                
+                // Add subtle gradient animation during chart load
+                const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
+                gradient.addColorStop(progress, 'rgba(99, 102, 241, 0.2)');
+                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.1)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+            }
         },
         scales: {
             x: {
