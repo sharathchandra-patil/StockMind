@@ -102,8 +102,8 @@ def fetch_wikipedia_summary(company_name):
         return None, f"Error fetching Wikipedia summary: {str(e)}" 
     return None, "No Wikipedia page found for the given company." 
  
-def fetch_stock_price(ticker, time_range="3mo"):
-    try:
+def fetch_stock_price(ticker, time_range="3mo"): 
+    try: 
         # Set a timeout for the request
         stock = yf.Ticker(ticker)
         # Use the provided time range
@@ -111,7 +111,7 @@ def fetch_stock_price(ticker, time_range="3mo"):
         
         if history.empty:
             print(f"No stock price data found for {ticker}")
-            # Generate dummy data for testing
+            # Generate mock data for testing
             import datetime
             import random
             today = datetime.datetime.now()
@@ -128,12 +128,12 @@ def fetch_stock_price(ticker, time_range="3mo"):
             stock_prices = [round(base_price + random.uniform(-10, 10), 2) for _ in range(days)]
             return stock_prices, time_labels
             
-        time_labels = history.index.strftime('%Y-%m-%d').tolist()
-        stock_prices = history['Close'].round(2).tolist()
-        return stock_prices, time_labels
-    except Exception as e:
-        print(f"Error fetching stock price: {str(e)}")
-        # Generate dummy data for testing
+        time_labels = history.index.strftime('%Y-%m-%d').tolist() 
+        stock_prices = [round(price, 2) for price in history['Close'].tolist()]  # Round prices to 2 decimal places
+        return stock_prices, time_labels 
+    except Exception as e: 
+        print(f"Error fetching stock price for {ticker}: {e}")
+        # Generate mock data for testing
         import datetime
         import random
         today = datetime.datetime.now()
@@ -283,61 +283,76 @@ def get_top_competitors(competitors):
     top_competitors = sorted(competitor_data, key=lambda x: x["market_cap"], reverse=True)[:3] 
     return top_competitors 
  
-def query_gemini_llm(company_name):
-    try:
+def query_gemini_llm(company_name): 
+    try: 
         # Check if client is defined (it might not be if API key is invalid)
         if 'client' not in globals():
-            return None
-
-        # Get the model
-        model = client.get_model("gemini-pro")
-        
-        # Define the prompt
-        prompt = f"""
+            print("Gemini client not initialized, using fallback data")
+            # Return fallback data
+            return [
+                {
+                    "name": "Technology Sector:",
+                    "competitors": ["Microsoft", "Apple", "IBM", "Oracle"]
+                },
+                {
+                    "name": "Financial Sector:",
+                    "competitors": ["JPMorgan Chase", "Bank of America", "Wells Fargo", "Citigroup"]
+                }
+            ]
+            
+        prompt = f""" 
         Based on the company name "{company_name}", provide a structured list of sectors and their main competitors.
         Focus on direct competitors in the same industry and market.
-        Format:
-        Sector Name:
-            Competitor 1
-            Competitor 2
-            Competitor 3
-
-        Leave a line after each sector. Do not use bullet points.
+        Format: 
+        Sector Name : 
+            Competitor 1 
+            Competitor 2 
+            Competitor 3 
+ 
+        Leave a line after each sector. Do not use bullet points. 
         Only include major, publicly traded companies that are direct competitors.
-        """
+        """ 
         
         try:
-            response = model.generate_content(prompt)
-            if response and response.text:
-                # Parse the response into structured data
-                sectors = []
-                current_sector = None
-                
-                for line in response.text.split('\n'):
-                    line = line.strip()
-                    if not line:
-                        continue
-                        
-                    if not line.startswith(' '):  # This is a sector name
-                        if current_sector:
-                            sectors.append(current_sector)
-                        current_sector = {"name": line.replace(':', ''), "competitors": []}
-                    elif current_sector:  # This is a competitor
-                        competitor = line.strip()
-                        if competitor and not competitor.startswith('•'):
-                            current_sector["competitors"].append(competitor)
-                
-                if current_sector:
-                    sectors.append(current_sector)
-                
-                return sectors
-        except Exception as e:
-            print(f"Error generating content: {str(e)}")
-            return None
+            response = client.models.generate_content( 
+                model="gemini-1.5-flash", contents=prompt 
+            ) 
+            content = response.candidates[0].content.parts[0].text
+        except Exception as api_error:
+            print(f"Error calling Gemini API: {api_error}")
+            # Return fallback data
+            return [
+                {
+                    "name": "Technology Sector:",
+                    "competitors": ["Microsoft", "Apple", "IBM", "Oracle"]
+                },
+                {
+                    "name": "Financial Sector:",
+                    "competitors": ["JPMorgan Chase", "Bank of America", "Wells Fargo", "Citigroup"]
+                }
+            ]
             
-    except Exception as e:
-        print(f"Error in query_gemini_llm: {str(e)}")
-        return None
+        sectors = [] 
+        for line in content.split("\n\n"): 
+            lines = line.strip().split("\n") 
+            if len(lines) > 1: 
+                sector_name = lines[0].strip() 
+                competitors = [l.strip() for l in lines[1:]] 
+                sectors.append({"name": sector_name, "competitors": competitors}) 
+        return sectors 
+    except Exception as e: 
+        print(f"Error in query_gemini_llm: {e}")
+        # Return fallback data
+        return [
+            {
+                "name": "Technology Sector:",
+                "competitors": ["Microsoft", "Apple", "IBM", "Oracle"]
+            },
+            {
+                "name": "Financial Sector:",
+                "competitors": ["JPMorgan Chase", "Bank of America", "Wells Fargo", "Citigroup"]
+            }
+        ]
  
 
 @backend.route("/analyze_company", methods=["GET"])
@@ -349,8 +364,12 @@ def analyze_company():
     if not company_name:
         return jsonify(success=False, error="No company name provided.")
 
+    _, summary = fetch_wikipedia_summary(company_name)
+    if not summary:
+        return jsonify(success=False, error="Could not find company description.")
+
     ticker = get_ticker_from_alpha_vantage(company_name)
-    if not ticker:
+    if not ticker:  
         return jsonify(success=False, error="Could not find ticker symbol.")
 
     stock_prices, time_labels = fetch_stock_price(ticker, time_range)
@@ -360,21 +379,19 @@ def analyze_company():
     # Only fetch competitors if this is the initial request (not a time range update)
     if time_range == "3mo":
         competitors = query_gemini_llm(company_name)  # Changed to pass company_name instead of summary
-        if not competitors:
-            competitors = [{"name": "No Sectors", "competitors": ["No competitors found."]}]
+    if not competitors:
+        competitors = [{"name": "No Sectors", "competitors": ["No competitors found."]}]
 
-        all_competitors = [comp for sector in competitors for comp in sector["competitors"]]
-        top_competitors = get_top_competitors(all_competitors)
-    else:
-        # For time range updates, we don't need to fetch competitors again
-        competitors = []
-        top_competitors = []
+    all_competitors = [comp for sector in competitors for comp in sector["competitors"]]
+    top_competitors = get_top_competitors(all_competitors)
+    
 
     return jsonify(
         success=True,
+        description=summary,
         ticker=ticker,
         stock_prices=stock_prices,
         time_labels=time_labels,
         competitors=competitors,
-        top_competitors=top_competitors
+        top_competitors=top_competitors,
     )
