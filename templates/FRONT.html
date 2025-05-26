@@ -314,21 +314,59 @@
             mode: 'index'
         },
         animation: {
-            duration: 1500,
-            easing: 'easeInOutQuart',
-            onProgress: function(animation) {
-                const progress = animation.currentStep / animation.numSteps;
-                const ctx = animation.chart.ctx;
-                const chartArea = animation.chart.chartArea;
-                
-                // Add subtle gradient animation during chart load
-                const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
-                gradient.addColorStop(progress, 'rgba(99, 102, 241, 0.2)');
-                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.1)');
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+            duration: 200
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.05)',
+                    drawBorder: false,
+                    drawTicks: false
+                },
+                ticks: {
+                    color: '#A1A1AA',
+                    font: {
+                        family: "'Poppins', sans-serif",
+                        size: 12
+                    },
+                    maxRotation: 45,
+                    minRotation: 45,
+                    padding: 10
+                }
+            },
+            y: {
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.05)',
+                    drawBorder: false,
+                    drawTicks: false
+                },
+                ticks: {
+                    color: '#A1A1AA',
+                    font: {
+                        family: "'Poppins', sans-serif",
+                        size: 12
+                    },
+                    padding: 10,
+                    callback: function(value) {
+                        return new Intl.NumberFormat('en-US', { 
+                            style: 'currency', 
+                            currency: 'USD', 
+                            minimumFractionDigits: 0, 
+                            maximumFractionDigits: 0 
+                        }).format(value);
+                    }
+                }
+            }
+        },
+        elements: {
+            line: {
+                tension: 0.4
+            },
+            point: {
+                radius: 0,
+                hitRadius: 10,
+                hoverRadius: 6,
+                hoverBorderWidth: 2
             }
         }
     };
@@ -375,7 +413,7 @@
       });
     }
 
-    function renderTopCompetitorsGraph(topCompetitors) {
+    function renderTopCompetitorsGraph(competitors) {
       const ctx = document.getElementById('topCompetitorsGraph').getContext('2d');
       if (topCompetitorsChartInstance) {
         topCompetitorsChartInstance.destroy();
@@ -387,7 +425,7 @@
         { border: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)' }   // Amber
       ];
       
-      const datasets = topCompetitors.map((comp, index) => {
+      const datasets = competitors.map((comp, index) => {
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, colors[index].background);
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -411,7 +449,7 @@
       topCompetitorsChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: topCompetitors[0].time_labels,
+          labels: competitors[0].time_labels,
           datasets: datasets
         },
         options: chartDefaultOptions
