@@ -372,88 +372,92 @@
     };
 
     function renderGraph(stockPrices, timeLabels) {
-      const ctx = document.getElementById('stockGraph').getContext('2d');
-      if (stockChartInstance) {
-        stockChartInstance.destroy();
-      }
-      
-      // Create gradient for the line
-      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-      gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
-      gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
-      
-      stockChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: timeLabels,
-          datasets: [{
-            label: 'Stock Price',
-            data: stockPrices,
-            borderColor: '#6366F1',
-            backgroundColor: gradient,
-            borderWidth: 2,
-            pointRadius: 0,
-            pointHoverRadius: 6,
-            pointHoverBackgroundColor: '#6366F1',
-            pointHoverBorderColor: '#FFFFFF',
-            pointHoverBorderWidth: 2,
-            tension: 0.4,
-            fill: true
-          }],
-        },
-        options: {
-          ...chartDefaultOptions,
-          plugins: {
-            ...chartDefaultOptions.plugins,
-            legend: {
-              display: false
-            }
-          }
+        const ctx = document.getElementById('stockGraph').getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (stockChartInstance) {
+            stockChartInstance.destroy();
         }
-      });
+        
+        // Create gradient for the line
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+        
+        stockChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Stock Price',
+                    data: stockPrices,
+                    borderColor: '#6366F1',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#6366F1',
+                    pointHoverBorderColor: '#FFFFFF',
+                    pointHoverBorderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                ...chartDefaultOptions,
+                plugins: {
+                    ...chartDefaultOptions.plugins,
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
     }
 
     function renderTopCompetitorsGraph(competitors) {
-      const ctx = document.getElementById('topCompetitorsGraph').getContext('2d');
-      if (topCompetitorsChartInstance) {
-        topCompetitorsChartInstance.destroy();
-      }
-      
-      const colors = [
-        { border: '#6366F1', background: 'rgba(99, 102, 241, 0.1)' },  // Indigo
-        { border: '#10B981', background: 'rgba(16, 185, 129, 0.1)' },  // Emerald
-        { border: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)' }   // Amber
-      ];
-      
-      const datasets = competitors.map((comp, index) => {
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, colors[index].background);
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        const ctx = document.getElementById('topCompetitorsGraph').getContext('2d');
         
-        return {
-          label: comp.name,
-          data: comp.stock_prices,
-          borderColor: colors[index].border,
-          backgroundColor: gradient,
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: colors[index].border,
-          pointHoverBorderColor: '#FFFFFF',
-          pointHoverBorderWidth: 2,
-          tension: 0.4,
-          fill: true
-        };
-      });
-      
-      topCompetitorsChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: competitors[0].time_labels,
-          datasets: datasets
-        },
-        options: chartDefaultOptions
-      });
+        // Destroy existing chart if it exists
+        if (topCompetitorsChartInstance) {
+            topCompetitorsChartInstance.destroy();
+        }
+        
+        const colors = [
+            { border: '#6366F1', background: 'rgba(99, 102, 241, 0.1)' },  // Indigo
+            { border: '#10B981', background: 'rgba(16, 185, 129, 0.1)' },  // Emerald
+            { border: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)' }   // Amber
+        ];
+        
+        const datasets = competitors.map((comp, index) => {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, colors[index].background);
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            return {
+                label: comp.name,
+                data: comp.stock_prices,
+                borderColor: colors[index].border,
+                backgroundColor: gradient,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: colors[index].border,
+                pointHoverBorderColor: '#FFFFFF',
+                pointHoverBorderWidth: 2,
+                tension: 0.4,
+                fill: true
+            };
+        });
+        
+        topCompetitorsChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: competitors[0].time_labels,
+                datasets: datasets
+            },
+            options: chartDefaultOptions
+        });
     }
 
     // Add event listeners for time range buttons
