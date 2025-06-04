@@ -113,6 +113,21 @@
         </div>
       </div>
     </section>
+
+    <!-- News Sentiment Section -->
+    <section id="newsSection" class="result-card" style="display: none;">
+      <h3><i class="fas fa-newspaper"></i> Latest News & Sentiment</h3>
+      <div id="newsList" class="news-list"></div>
+      <div id="newsFilter" style="margin-top:10px; display:none;">
+        <label for="sentimentFilter">Filter by sentiment:</label>
+        <select id="sentimentFilter">
+          <option value="all">All</option>
+          <option value="POSITIVE">Positive 😃</option>
+          <option value="NEUTRAL">Neutral 😐</option>
+          <option value="NEGATIVE">Negative 😞</option>
+        </select>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer-bottom">
@@ -243,6 +258,34 @@
           } else {
             topCompetitorsSection.style.display = 'none';
           }
+
+          // Fetch and display news sentiment
+          fetch(`/news?company=${encodeURIComponent(companyName)}`)
+            .then(resp => resp.json())
+            .then(newsData => {
+              const newsSection = document.getElementById('newsSection');
+              const newsList = document.getElementById('newsList');
+              const newsFilter = document.getElementById('newsFilter');
+              if (newsData.articles && newsData.articles.length > 0) {
+                newsList.innerHTML = '';
+                newsData.articles.forEach(article => {
+                  const item = document.createElement('div');
+                  item.className = 'news-item';
+                  item.innerHTML = `
+                    <a href="${article.url}" target="_blank" class="news-title">${article.title}</a>
+                    <span class="news-date">${new Date(article.published_at).toLocaleString()}</span>
+                    <span class="news-sentiment">${article.emoji} <span class="sentiment-label">${article.sentiment}</span></span>
+                  `;
+                  item.setAttribute('data-sentiment', article.sentiment);
+                  newsList.appendChild(item);
+                });
+                newsSection.style.display = 'block';
+                revealSection(newsSection);
+                newsFilter.style.display = 'inline-block';
+              } else {
+                newsSection.style.display = 'none';
+              }
+            });
         } else {
           // Implement a more user-friendly error display
           alert(data.error || 'Error fetching data. Please try again.');
@@ -420,6 +463,18 @@
         updateTimeRange(e.target.dataset.range);
       });
     });
+
+    // News filter event
+    document.getElementById('sentimentFilter').addEventListener('change', function() {
+      const value = this.value;
+      document.querySelectorAll('.news-item').forEach(item => {
+        if (value === 'all' || item.getAttribute('data-sentiment') === value) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
   </script>
 
   <style>
@@ -453,6 +508,48 @@
       color: white;
       border-color: var(--primary-color);
       font-weight: 600;  /* Made active button text bolder */
+    }
+
+    .news-list {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .news-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface-color);
+      border-radius: var(--border-radius-sm);
+      padding: 10px 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .news-title {
+      font-weight: 500;
+      color: var(--primary-color);
+      text-decoration: none;
+      flex: 1;
+    }
+    .news-title:hover {
+      text-decoration: underline;
+    }
+    .news-date {
+      color: #888;
+      font-size: 0.95em;
+      margin-right: 10px;
+    }
+    .news-sentiment {
+      font-size: 1.2em;
+      margin-left: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sentiment-label {
+      font-size: 0.95em;
+      color: #666;
+      margin-left: 2px;
     }
   </style>
 </body>

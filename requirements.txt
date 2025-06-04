@@ -38,3 +38,8 @@ flask_sqlAlchemy
 flask_login
 jwt
 flask_session
+
+# News Sentiment Analysis dependencies
+requests
+transformers
+torch
