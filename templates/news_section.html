@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Latest News for {{ company_name }}</h2>
+    
+    <!-- Sentiment Filter -->
+    <div class="mb-4">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary active" data-sentiment="all">All</button>
+            <button type="button" class="btn btn-outline-success" data-sentiment="positive">Positive 😃</button>
+            <button type="button" class="btn btn-outline-secondary" data-sentiment="neutral">Neutral 😐</button>
+            <button type="button" class="btn btn-outline-danger" data-sentiment="negative">Negative 😞</button>
+        </div>
+    </div>
+
+    <!-- News Articles -->
+    <div class="row" id="news-container">
+        {% for article in articles %}
+        <div class="col-md-6 mb-4 news-card" data-sentiment="{{ article.sentiment }}">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title">
+                            <a href="{{ article.url }}" target="_blank" class="text-decoration-none">
+                                {{ article.title }}
+                            </a>
+                        </h5>
+                        <span class="sentiment-emoji">{{ article.sentiment_emoji }}</span>
+                    </div>
+                    <p class="card-text text-muted">
+                        <small>
+                            {{ article.source }} • {{ article.published_at }}
+                        </small>
+                    </p>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar {% if article.sentiment == 'positive' %}bg-success{% elif article.sentiment == 'negative' %}bg-danger{% else %}bg-secondary{% endif %}"
+                             role="progressbar"
+                             style="width: {{ (article.sentiment_score + 1) * 50 }}%"
+                             aria-valuenow="{{ (article.sentiment_score + 1) * 50 }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('[data-sentiment]');
+    const newsCards = document.querySelectorAll('.news-card');
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const selectedSentiment = this.dataset.sentiment;
+            
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter news cards
+            newsCards.forEach(card => {
+                if (selectedSentiment === 'all' || card.dataset.sentiment === selectedSentiment) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+
+<style>
+.news-card {
+    transition: all 0.3s ease;
+}
+
+.news-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.sentiment-emoji {
+    font-size: 1.5rem;
+}
+
+.progress {
+    background-color: #f0f0f0;
+    border-radius: 10px;
+}
+</style>
+{% endblock %} 
