@@ -115,17 +115,24 @@
     </section>
 
     <!-- News Sentiment Section -->
-    <section id="newsSection" class="result-card" style="display: none;">
-      <h3><i class="fas fa-newspaper"></i> Latest News & Sentiment</h3>
-      <div id="newsList" class="news-list"></div>
-      <div id="newsFilter" style="margin-top:10px; display:none;">
-        <label for="sentimentFilter">Filter by sentiment:</label>
-        <select id="sentimentFilter">
-          <option value="all">All</option>
-          <option value="POSITIVE">Positive 😃</option>
-          <option value="NEUTRAL">Neutral 😐</option>
-          <option value="NEGATIVE">Negative 😞</option>
-        </select>
+    <section id="newsSection" class="section-container" style="display: none;">
+      <div class="container">
+        <h2><i class="fas fa-newspaper"></i> Latest News & Sentiment</h2>
+        
+        <!-- Sentiment Filter -->
+        <div class="mb-4">
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary active" data-sentiment="all">All</button>
+            <button type="button" class="btn btn-outline-success" data-sentiment="positive">Positive 😃</button>
+            <button type="button" class="btn btn-outline-secondary" data-sentiment="neutral">Neutral 😐</button>
+            <button type="button" class="btn btn-outline-danger" data-sentiment="negative">Negative 😞</button>
+          </div>
+        </div>
+
+        <!-- News Articles -->
+        <div class="row" id="news-container">
+          <!-- News articles will be dynamically inserted here -->
+        </div>
       </div>
     </section>
   </main>
@@ -193,21 +200,32 @@
       e.preventDefault();
       const companyName = document.getElementById('companyName').value.trim();
       if (!companyName) {
-        // You could implement a custom alert/modal here for better UX
         alert('Please enter a company name!');
         return;
       }
 
       currentTicker = companyName;
 
-      loadingText.style.display = 'flex'; // Changed to flex for spinner alignment
+      loadingText.style.display = 'block';
       resultsSection.style.display = 'none'; // Hide previous results
-      // Remove 'visible' class from all result cards for re-animation
       document.querySelectorAll('.result-card, .results-section').forEach(el => el.classList.remove('visible'));
+      
+      // Hide news section initially until new data is loaded
+      document.getElementById('newsSection').style.display = 'none';
+      document.getElementById('news-container').innerHTML = '';
 
       try {
         const apiUrl = window.location.origin;
         const response = await fetch(`${apiUrl}/service/analyze_company?company_name=${encodeURIComponent(companyName)}`);
+        
+        // Check if the response is JSON before parsing
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          console.error("Received non-JSON response from analyze_company:", await response.text());
+          alert('Error: Unexpected response from server. Please check the console.');
+          return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
@@ -259,42 +277,93 @@
             topCompetitorsSection.style.display = 'none';
           }
 
-          // Fetch and display news sentiment
-          fetch(`/news?company=${encodeURIComponent(companyName)}`)
-            .then(resp => resp.json())
-            .then(newsData => {
-              const newsSection = document.getElementById('newsSection');
-              const newsList = document.getElementById('newsList');
-              const newsFilter = document.getElementById('newsFilter');
-              if (newsData.articles && newsData.articles.length > 0) {
-                newsList.innerHTML = '';
-                newsData.articles.forEach(article => {
-                  const item = document.createElement('div');
-                  item.className = 'news-item';
-                  item.innerHTML = `
-                    <a href="${article.url}" target="_blank" class="news-title">${article.title}</a>
-                    <span class="news-date">${new Date(article.published_at).toLocaleString()}</span>
-                    <span class="news-sentiment">${article.emoji} <span class="sentiment-label">${article.sentiment}</span></span>
-                  `;
-                  item.setAttribute('data-sentiment', article.sentiment);
-                  newsList.appendChild(item);
-                });
-                newsSection.style.display = 'block';
-                revealSection(newsSection);
-                newsFilter.style.display = 'inline-block';
-              } else {
-                newsSection.style.display = 'none';
-              }
+          // --- News Sentiment Analysis Display (NEW INTEGRATION) ---
+          const newsSection = document.getElementById('newsSection');
+          const newsContainer = document.getElementById('news-container');
+          newsContainer.innerHTML = ''; // Clear previous news
+
+          if (data.news_articles && data.news_articles.length > 0) {
+            data.news_articles.forEach(article => {
+              const newsCard = document.createElement('div');
+              newsCard.className = 'col-md-6 mb-4 news-card';
+              newsCard.dataset.sentiment = article.sentiment_label.toLowerCase(); // Use sentiment_label for filtering
+              
+              newsCard.innerHTML = `
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <h5 class="card-title">
+                        <a href="${article.url}" target="_blank" class="text-decoration-none">
+                          ${article.title}
+                        </a>
+                      </h5>
+                      <span class="sentiment-emoji">${article.sentiment_emoji}</span>
+                    </div>
+                    <p class="card-text text-muted">
+                      <small>
+                        ${article.source} • ${new Date(article.published_at).toLocaleDateString()}
+                      </small>
+                    </p>
+                    <div class="progress" style="height: 5px;">
+                      <div class="progress-bar ${
+                        article.sentiment_label.toLowerCase() === 'positive' ? 'bg-success' :
+                        article.sentiment_label.toLowerCase() === 'negative' ? 'bg-danger' :
+                        'bg-secondary'}"
+                           role="progressbar"
+                           style="width: ${(article.sentiment_score + 1) * 50}%"
+                           aria-valuenow="${(article.sentiment_score + 1) * 50}"
+                           aria-valuemin="0"
+                           aria-valuemax="100">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+              newsContainer.appendChild(newsCard);
             });
+            revealSection(newsSection); // Show the news section
+
+            // Update sentiment summary display (optional, if you want to show it on frontend)
+            if (data.news_summary) {
+              console.log('News Sentiment Summary:', data.news_summary); // Log for verification
+              // You could add elements here to display data.news_summary on the page if desired.
+            }
+            
+            // Add event listeners for sentiment filter buttons (re-initialize if needed)
+            const filterButtons = newsSection.querySelectorAll('[data-sentiment]');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const selectedSentiment = this.dataset.sentiment;
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    const newsCards = newsContainer.querySelectorAll('.news-card');
+                    newsCards.forEach(card => {
+                        if (selectedSentiment === 'all' || card.dataset.sentiment === selectedSentiment) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+          } else {
+            newsContainer.innerHTML = '<p class="text-muted">No recent news found for this company.</p>';
+            revealSection(newsSection); // Still show the section, but with no news message
+          }
+          // --- End News Sentiment Analysis Display ---
+
         } else {
-          // Implement a more user-friendly error display
+          // Handle overall analysis failure
           alert(data.error || 'Error fetching data. Please try again.');
           resultsSection.style.display = 'none';
+          document.getElementById('newsSection').style.display = 'none'; // Hide news if main analysis fails
         }
       } catch (error) {
-        console.error('Error:', error);
-        alert('An unexpected error occurred. Please check the console and try again.');
+        console.error('Error in company analysis:', error);
+        alert('An unexpected error occurred during company analysis. Please check the console and try again.');
         resultsSection.style.display = 'none';
+        document.getElementById('newsSection').style.display = 'none'; // Hide news if error
       } finally {
         loadingText.style.display = 'none';
       }
@@ -464,17 +533,36 @@
       });
     });
 
-    // News filter event
-    document.getElementById('sentimentFilter').addEventListener('change', function() {
-      const value = this.value;
-      document.querySelectorAll('.news-item').forEach(item => {
-        if (value === 'all' || item.getAttribute('data-sentiment') === value) {
-          item.style.display = '';
-        } else {
-          item.style.display = 'none';
-        }
-      });
-    });
+    // Add CSS styles for news section
+    const style = document.createElement('style');
+    style.textContent = `
+      .news-card {
+        transition: all 0.3s ease;
+      }
+      
+      .news-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
+      
+      .sentiment-emoji {
+        font-size: 1.5rem;
+      }
+      
+      .progress {
+        background-color: #f0f0f0;
+        border-radius: 10px;
+      }
+      
+      .btn-group {
+        margin-bottom: 20px;
+      }
+      
+      .btn-group .btn {
+        margin-right: 5px;
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 
   <style>

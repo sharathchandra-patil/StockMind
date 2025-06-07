@@ -1,6 +1,3 @@
-
-
-
 # StockMind 📈
 
 StockMind is a Stock peer competitor and Stock Analysis tool that identifies peer competitors for a company and fetches its live stock prices.
@@ -13,6 +10,7 @@ StockMind is a Stock peer competitor and Stock Analysis tool that identifies pee
 ✅ Real-Time Stock Prices – Fetches live stock data using the yfinance library.  
 ✅ Automated Ticker Retrieval – Extracts the stock ticker symbol from Alpha Vantage API.  
 ✅ Company Information Fetching – Uses Wikipedia API to gather company details.  
+✅ News Sentiment Analysis – Fetches and analyzes latest news using NewsAPI and VADER sentiment analysis.  
 ✅ US Market Focused – Currently designed for United States stock exchanges.
 
 ---
@@ -24,6 +22,8 @@ StockMind is a Stock peer competitor and Stock Analysis tool that identifies pee
 - Gemini LLM – Identifies peer competitors
 - Alpha Vantage API – Retrieves stock ticker symbols
 - yfinance – Fetches real-time stock prices
+- NewsAPI – Fetches latest company news
+- VADER Sentiment Analysis – Analyzes news sentiment
 
 ---
 
@@ -34,7 +34,7 @@ StockMind is a Stock peer competitor and Stock Analysis tool that identifies pee
 ```bash
 git clone https://github.com/sharathchandra-patil/StockMind.git
 cd StockMind
-````
+```
 
 2️⃣ Install dependencies:
 
@@ -68,6 +68,11 @@ Company: Apple Inc. (AAPL)
 Industry: Technology
 Peer Competitors: Microsoft, Google, Amazon
 Current Stock Price: $180.32
+
+Latest News:
+1. "Apple announces new AI features" (Positive 😊)
+2. "Apple faces regulatory scrutiny" (Negative 😟)
+3. "Apple's Q2 earnings beat expectations" (Positive 😊)
 ```
 
 ---
@@ -133,7 +138,7 @@ Top 3 Competitors by Market Cap:
 [Line chart showing 3-month stock trends of NVDA, F, PCRFY]
 ```
 
-This layered output gives users a **holistic and sector-aware view** of a company’s competitive environment, backed by real-time financial insights and AI-powered analysis.
+This layered output gives users a **holistic and sector-aware view** of a company's competitive environment, backed by real-time financial insights and AI-powered analysis.
 
 ---
 

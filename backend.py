@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import os
 from alert_system.scheduler import start_scheduler, alerts
 from utils import login_required
+from news_sentiment import NewsSentimentAnalyzer
 # Load environment variables from .env file
 load_dotenv()
 
@@ -99,7 +100,8 @@ def fetch_wikipedia_summary(company_name):
             summary = wikipedia.summary(page_title, sentences=2) 
             return page_title, summary 
     except Exception as e: 
-        return None, f"Error fetching Wikipedia summary: {str(e)}" 
+        print(f"Error fetching Wikipedia summary for {company_name}: {str(e)}")
+        return None, "No Wikipedia page found for the given company or an error occurred."
     return None, "No Wikipedia page found for the given company." 
  
 def fetch_stock_price(ticker, time_range="3mo"): 
@@ -166,16 +168,25 @@ def get_ticker_from_alpha_vantage(company_name):
             "keywords": company_name, 
             "apikey": ALPHA_VANTAGE_API_KEY, 
         } 
-        response = requests.get(url, params=params, timeout=3)  # 3 second timeout
+        response = requests.get(url, params=params, timeout=5)
+        response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
+
+        # Check if the response is empty or malformed JSON
+        if not response.text.strip():
+            print(f"Alpha Vantage API returned empty response for {company_name}. Falling back.")
+            return company_name.split()[0].upper() if company_name else "MSFT" # More robust fallback
+
         data = response.json() 
         
-        # Check if we got an error message about invalid API key
+        # Check if we got an error message about invalid API key or other issues
         if "Error Message" in data:
-            print(f"Alpha Vantage API error: {data['Error Message']}")
-            # Fallback: Try to guess the ticker from the company name
-            return company_name.split()[0].upper()
+            print(f"Alpha Vantage API error for {company_name}: {data['Error Message']}. Falling back.")
+            return company_name.split()[0].upper() if company_name else "MSFT" # More robust fallback
+        if "Note" in data and "rate limit" in data["Note"].lower():
+            print(f"Alpha Vantage API rate limit hit for {company_name}. Falling back.")
+            return company_name.split()[0].upper() if company_name else "MSFT" # More robust fallback
             
-        if "bestMatches" in data: 
+        if "bestMatches" in data and len(data["bestMatches"]) > 0: 
             for match in data["bestMatches"]: 
                 if match["4. region"] == "United States": 
                     # Add to cache for future use
@@ -183,11 +194,18 @@ def get_ticker_from_alpha_vantage(company_name):
                     return match["1. symbol"] 
         
         # If no matches found, try to guess the ticker
-        return company_name.split()[0].upper()
-    except Exception as e: 
-        print(f"Error in get_ticker_from_alpha_vantage: {e}")
-        # Fallback: Try to guess the ticker from the company name
-        return company_name.split()[0].upper()
+        print(f"No Alpha Vantage matches found for {company_name}, guessing ticker. Falling back.")
+        return company_name.split()[0].upper() if company_name else "MSFT" # More robust fallback
+    except requests.exceptions.RequestException as e: # Catch network/HTTP errors
+        print(f"Network or HTTP error fetching ticker for {company_name}: {e}. Falling back.")
+        return company_name.split()[0].upper() if company_name else "MSFT" # More robust fallback
+    except ValueError as e: # Catch JSON decoding errors
+        print(f"JSON decoding error for Alpha Vantage response for {company_name}: {e}. Falling back.")
+        print(f"Response content (partial): {response.text[:200]}...") # Log partial content for debugging
+        return company_name.split()[0].upper() if company_name else "MSFT" # More robust fallback
+    except Exception as e: # Catch any other unexpected errors
+        print(f"Unexpected error in get_ticker_from_alpha_vantage for {company_name}: {e}. Falling back.")
+        return company_name.split()[0].upper() if company_name else "MSFT" # More robust fallback
  
 def fetch_market_cap(ticker): 
     try: 
@@ -364,34 +382,48 @@ def analyze_company():
     if not company_name:
         return jsonify(success=False, error="No company name provided.")
 
-    _, summary = fetch_wikipedia_summary(company_name)
-    if not summary:
-        return jsonify(success=False, error="Could not find company description.")
+    try:
+        _, summary = fetch_wikipedia_summary(company_name)
+        if not summary:
+            summary = "No description found for this company." # Provide a fallback summary
 
-    ticker = get_ticker_from_alpha_vantage(company_name)
-    if not ticker:  
-        return jsonify(success=False, error="Could not find ticker symbol.")
+        ticker = get_ticker_from_alpha_vantage(company_name)
+        if not ticker:  
+            # This case should ideally not be reached with the improved get_ticker_from_alpha_vantage
+            ticker = company_name.split()[0].upper() if company_name else "AAPL" # Absolute fallback
 
-    stock_prices, time_labels = fetch_stock_price(ticker, time_range)
-    if not stock_prices or not time_labels:
-        return jsonify(success=False, error="Could not fetch stock prices.")
+        stock_prices, time_labels = fetch_stock_price(ticker, time_range)
+        if not stock_prices or not time_labels:
+            # fetch_stock_price already returns mock data on failure, so this check is mostly for clarity
+            print(f"Could not fetch real stock prices for {ticker}, using mock data.")
+            # Fallback for stock prices is already handled in fetch_stock_price itself
 
-    # Only fetch competitors if this is the initial request (not a time range update)
-    if time_range == "3mo":
-        competitors = query_gemini_llm(company_name)  # Changed to pass company_name instead of summary
-    if not competitors:
-        competitors = [{"name": "No Sectors", "competitors": ["No competitors found."]}]
+        competitors = None 
+        if time_range == "3mo": # Only fetch competitors on initial analysis
+            competitors = query_gemini_llm(company_name)  
 
-    all_competitors = [comp for sector in competitors for comp in sector["competitors"]]
-    top_competitors = get_top_competitors(all_competitors)
-    
+        if not competitors:
+            competitors = [{"name": "No Sectors", "competitors": ["No competitors found."]}]
 
-    return jsonify(
-        success=True,
-        description=summary,
-        ticker=ticker,
-        stock_prices=stock_prices,
-        time_labels=time_labels,
-        competitors=competitors,
-        top_competitors=top_competitors,
-    )
+        all_competitors = [comp for sector in competitors for comp in sector["competitors"]]
+        top_competitors = get_top_competitors(all_competitors)
+        
+        # Fetch news articles with sentiment
+        news_analyzer = NewsSentimentAnalyzer()
+        news_articles = news_analyzer.get_company_news(company_name, ticker)
+        sentiment_summary = news_analyzer.get_sentiment_summary(news_articles)
+
+        return jsonify(
+            success=True,
+            description=summary,
+            ticker=ticker,
+            stock_prices=stock_prices,
+            time_labels=time_labels,
+            competitors=competitors,
+            top_competitors=top_competitors,
+            news_articles=news_articles,  # Add news articles to the response
+            news_summary=sentiment_summary # Add news summary to the response
+        )
+    except Exception as e:
+        print(f"Unhandled error in analyze_company for {company_name}: {e}")
+        return jsonify(success=False, error=f"An unexpected server error occurred: {str(e)}"), 500
