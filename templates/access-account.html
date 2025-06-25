@@ -1,107 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-<title>Access Account</title>
-<style>
-    html{
-        height: 100%;
-        margin: 0;
-        font-family: 'Poppins', sans-serif;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <title>Access Account</title>
+  <style>
+    html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
     }
+
     body {
-        display: flex;
-        justify-content: center;
-        padding: 50px;
-        font-family: 'Poppins', sans-serif;
-        background: rgb(15, 15, 15);
-        color: #c9d1d9;
-        margin: 100px auto;
-    }   
+      display: flex;
+      justify-content: center;
+      padding: 50px;
+      background: rgb(15, 15, 15);
+      color: #c9d1d9;
+      margin: 100px auto;
+    }
+
     .container {
-        background: linear-gradient(180deg, #232a34, #14181d);
-        width: 330px;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 0 15px rgba(58, 139, 253, 0.7);
+      background: linear-gradient(180deg, #232a34, #14181d);
+      width: 330px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(58, 139, 253, 0.7);
     }
+
     .tabs {
-        display: flex;
+      display: flex;
     }
+
     .tab {
-        flex: 1;
-        text-align: center;
-        padding: 15px;
-        cursor: pointer;
-        background: #333;
-        font-weight: bold;
-        user-select: none;
-        color: #ccc;
-        transition: background 0.3s, color 0.3s;
+      flex: 1;
+      text-align: center;
+      padding: 15px;
+      cursor: pointer;
+      background: #333;
+      font-weight: bold;
+      user-select: none;
+      color: #ccc;
+      transition: background 0.3s, color 0.3s;
     }
+
     .tab.active {
-        background: #3a8bfd;
-        color: white;
+      background: #3a8bfd;
+      color: white;
     }
+
     .forms {
-        position: relative;
-        height: 300px;
-        overflow: hidden;
+      position: relative;
+      height: 400px;
+      overflow: hidden;
     }
+
     form {
-        position: absolute;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        padding: 30px 20px;
-        gap:10px;
-        box-sizing: border-box;
-        transition: transform 0.4s ease;
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      padding: 30px 20px;
+      gap: 10px;
+      box-sizing: border-box;
+      transition: transform 0.4s ease;
     }
+
     form input {
-        width: 100%;
-        margin-bottom: 12px;
-        padding: 10px;
-        font-family: 'Poppins', sans-serif;
-        box-sizing: border-box;
-        border-radius: 5px;
-        border: 1px solid #555;
-        background: #eeecec;
-        color: #4e4c4c;
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px;
+      font-family: 'Poppins', sans-serif;
+      box-sizing: border-box;
+      border-radius: 5px;
+      border: 1px solid #555;
+      background: #eeecec;
+      color: #4e4c4c;
     }
+
     form input::placeholder {
-        color: rgb(137, 137, 137)
+      color: rgb(137, 137, 137);
     }
+
     form button {
-        font-family: 'Poppins', sans-serif;
-        width: 100%;
-        padding: 10px;
-        border: none;
-        background: #3a8bfd;
-        color: white;
-        font-weight: bold;
-        border-radius: 4px;
-        cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background: #3a8bfd;
+      color: white;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
     }
+
     form button.register-btn {
-        background: #3728a7;
+      background: #3728a7;
+    }
+
+    .oauth-section {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .oauth-section p {
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+
+    .oauth-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .oauth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 12px;
+      flex: 1;
+      border-radius: 6px;
+      background: #0d1117;
+      color: white;
+      border: 1px solid #444;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+      transition: background 0.2s ease;
+    }
+
+    .oauth-btn:hover {
+      background: #1f2937;
+    }
+
+    .oauth-btn img {
+      height: 18px;
     }
 
     #loginForm {
-        transform: translateX(0%);
+      transform: translateX(0%);
     }
+
     #registerForm {
-        transform: translateX(100%);
+      transform: translateX(100%);
     }
+
     .show-register #loginForm {
-        transform: translateX(-100%);
+      transform: translateX(-100%);
     }
+
     .show-register #registerForm {
-        transform: translateX(0%);
+      transform: translateX(0%);
     }
-</style>
+  </style>
 </head>
 <body>
 
@@ -111,46 +167,77 @@
     <div class="tab" id="registerTab">Sign Up</div>
   </div>
   <div class="forms">
+    <!-- Login Form -->
     <form id="loginForm" method="POST" action="/account/login">
-        <input type="email" name="email" placeholder="Email" required/>
-        <input type="password" name="password" placeholder="Password" required/>
-        <button type="submit" class="login-btn">Login</button>
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit" class="login-btn">Login</button>
+      <div class="oauth-section">
+        <p>Or continue with</p>
+        <br>
+        <div class="oauth-buttons">
+          <a class="oauth-btn" href="/account/login/google">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
+            Google
+          </a>
+          <a class="oauth-btn" href="/account/login/github">
+            <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" />
+            GitHub
+          </a>
+        </div>
+      </div>
     </form>
 
+    <!-- Register Form -->
     <form id="registerForm" method="POST" action="/account/register">
       <input type="text" name="username" placeholder="Username" required />
       <input type="email" name="email" placeholder="Email" required />
-      <input type="password" name="password" placeholder="Password (at least 8 characters)" required minlength="8"/>
+      <input type="password" name="password" placeholder="Password (at least 8 characters)" required minlength="8" />
       <button type="submit" class="register-btn">Sign Up</button>
+      <div class="oauth-section">
+        <p>Or continue with</p>
+        <div class="oauth-buttons">
+          <a class="oauth-btn" href="/account/register/google">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
+            Google
+          </a>
+          <a class="oauth-btn" href="/account/register/github">
+            <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" />
+            GitHub
+          </a>
+        </div>
+      </div>
     </form>
   </div>
 </div>
 
-{%if otp %}
+{% if otp %}
 <script>
-    let inp = prompt("Check your inbox/spam for OTP :")
-    if(inp!=null){
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = "{{url_for('verify')}}";
+  let inp = prompt("Check your inbox/spam for OTP:");
+  if (inp != null) {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "{{ url_for('auth.verify') }}";
 
-        const input = document.createElement("input");
-        input.type="hidden";
-        input.name = "userOTP";
-        input.value = inp;
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }else{
-        alert("Invalid");
-    }
-</script>
-{%endif%}
-{% if error %}
-<script>
-alert("{{error}}");
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "userOTP";
+    input.value = inp;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+  } else {
+    alert("Invalid");
+  }
 </script>
 {% endif %}
+
+{% if error %}
+<script>
+  alert("{{ error }}");
+</script>
+{% endif %}
+
 <script>
   const loginTab = document.getElementById('loginTab');
   const registerTab = document.getElementById('registerTab');

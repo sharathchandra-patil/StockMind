@@ -4,6 +4,8 @@ openai==0.28.0
 wikipedia==1.4.0
 newsapi-python==0.2.7
 vaderSentiment==3.3.2
+authlib>=1.2.1
+
 
 # Finance & Data
 yfinance==0.2.50
