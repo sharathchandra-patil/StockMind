@@ -3,6 +3,8 @@ import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import random
+import time
+from typing import Tuple
 
 #website owner will store their gmail application key 
 #in environemnt variable named EMPS and 
@@ -10,12 +12,14 @@ import random
 def generateOTP(username, usermail):
     smpt_server = 'smtp.gmail.com'
     smtp_port = 587
-    #change this
     provider = os.getenv("<enter your environment variable storing the email address>")
-    #change this
     emps = os.getenv('<enter the env variable storing the gmail app pasword>')
+    if not provider or not emps:
+        raise EnvironmentError("Missing email credentials in environment variables.")
     msg = MIMEMultipart()
-    otp = random.randint(100000,999999)
+    otp = random.randint(100000, 999999)
+    otp_generated_time = time.time()
+
     btn = f"""
     <html>
     <head>
@@ -57,12 +61,12 @@ def generateOTP(username, usermail):
                 font-size: 15px;
                 margin-bottom: 10px;
             }}
-            a{{
+            a {{
                 color: white;
             }}
-            h5{{
+            h5 {{
                 color: #bfbfbf;
-                font-style:none;
+                font-style: none;
             }}
         </style>
     </head>
@@ -79,21 +83,32 @@ def generateOTP(username, usermail):
     msg['From'] = provider
     msg['To'] = usermail
     msg['Subject'] = "Your OTP for StockMind is here"
-    msg['Reply-To'] = provider 
+    msg['Reply-To'] = provider
     msg['X-Mailer'] = 'Python-Mail'
     msg.attach(MIMEText(btn, 'html'))
 
-    s = smt.SMTP(smpt_server,smtp_port)
     try:
+        s = smt.SMTP(smtp_server, smtp_port)
         s.starttls()
-        s.login(provider,emps)
+        s.login(provider, emps)
         s.sendmail(provider, usermail, msg.as_string())
-    finally:    
+    except smt.SMTPException as e:
+        print(f"Failed to send email: {e}")
+        raise
+    finally:
         s.quit()
-    return otp
 
-def verifyOTP(otp,inp):
+    return otp, otp_generated_time
+def verifyOTP(otp: int, inp: int, otp_generated_time: float, expiry_seconds: int = 300) -> bool:
     otp = str(otp)
     inp = str(inp)
-    if(otp==inp):return True
-    else: return False
+    current_time = time.time()
+
+    if current_time - otp_generated_time > expiry_seconds:
+        print("OTP expired.")
+        return False
+
+    if otp == inp:
+        return True
+    else:
+        return False
