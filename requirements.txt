@@ -18,7 +18,7 @@ Flask==3.1.1
 Flask-Cors==6.0.0
 # OR if using FastAPI:
 fastapi==0.115.8
-starlette==0.45.3
+starlette==0.49.1
 
 # Web & API tools
 requests==2.32.4
