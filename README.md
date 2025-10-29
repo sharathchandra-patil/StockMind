@@ -4,20 +4,20 @@ StockMind is a Stock peer competitor and Stock Analysis tool that identifies pee
 
 ---
 
-## 🚀 Features
+##  Features
 
-✅ Competitor Analysis – Uses Gemini LLM to find peer competitors based on the company's industry.  
-✅ Real-Time Stock Prices – Fetches live stock data using the yfinance library.  
-✅ Automated Ticker Retrieval – Extracts the stock ticker symbol from Alpha Vantage API.  
-✅ Company Information Fetching – Uses Wikipedia API to gather company details.  
-✅ News Sentiment Analysis – Fetches and analyzes latest news using NewsAPI and VADER sentiment analysis.  
-✅ US Market Focused – Currently designed for United States stock exchanges.
+- Competitor Analysis – Uses Gemini LLM to find peer competitors based on the company's industry.  
+- Real-Time Stock Prices – Fetches live stock data using the yfinance library.  
+- Automated Ticker Retrieval – Extracts the stock ticker symbol from Alpha Vantage API.  
+- Company Information Fetching – Uses Wikipedia API to gather company details.  
+- News Sentiment Analysis – Fetches and analyzes latest news using NewsAPI and VADER sentiment analysis.  
+- US Market Focused – Currently designed for United States stock exchanges.
 
 ---
 
 ## 🔧 Tech Stack
 
-- Python 🐍
+- Python 
 - Wikipedia API – Fetches company descriptions
 - Gemini LLM – Identifies peer competitors
 - Alpha Vantage API – Retrieves stock ticker symbols
