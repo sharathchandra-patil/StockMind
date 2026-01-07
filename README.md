@@ -1,4 +1,4 @@
-# StockMind 📈
+# StockMind 
 
 StockMind is a Stock peer competitor and Stock Analysis tool that identifies peer competitors for a company and fetches its live stock prices.
 
@@ -15,7 +15,7 @@ StockMind is a Stock peer competitor and Stock Analysis tool that identifies pee
 
 ---
 
-## 🔧 Tech Stack
+##  Tech Stack
 
 - Python 
 - Wikipedia API – Fetches company descriptions
@@ -27,7 +27,7 @@ StockMind is a Stock peer competitor and Stock Analysis tool that identifies pee
 
 ---
 
-## 📜 Installation
+##  Installation
 
 1️⃣ Clone the repository:
 
@@ -53,7 +53,7 @@ ALPHA_VANTAGE_API_KEY=your_api_key
 
 ---
 
-## 🚀 Usage
+##  Usage
 
 Run the script and input a company name:
 
@@ -70,47 +70,47 @@ Peer Competitors: Microsoft, Google, Amazon
 Current Stock Price: $180.32
 
 Latest News:
-1. "Apple announces new AI features" (Positive 😊)
-2. "Apple faces regulatory scrutiny" (Negative 😟)
-3. "Apple's Q2 earnings beat expectations" (Positive 😊)
+1. "Apple announces new AI features" (Positive )
+2. "Apple faces regulatory scrutiny" (Negative)
+3. "Apple's Q2 earnings beat expectations" (Positive )
 ```
 
 ---
 
-## 🖥️ Output Display
+##  Output Display
 
 When the user runs the script and inputs a company name, the following sequence of operations occurs, and the corresponding output is displayed:
 
-1. **📄 Company Description**
+1. ** Company Description**
 
    * The system fetches a concise summary of the company from **Wikipedia** using the Wikipedia API.
    * This description helps identify all business domains the company operates in (e.g., Tesla → automotive, battery tech, aerospace, AI).
 
-2. **🧠 Multi-Sector Peer Analysis**
+2. ** Multi-Sector Peer Analysis**
 
    * The Wikipedia summary is sent to the **Gemini LLM**, which determines the **sectors** the company is involved in.
    * For each sector, it returns a list of **peer competitors** relevant to that domain.
 
-3. **🔍 Ticker Symbol Extraction**
+3. ** Ticker Symbol Extraction**
 
    * The **Alpha Vantage API** is used to extract the official **stock ticker symbol** of the company (e.g., Tesla → TSLA).
 
-4. **📈 Real-Time Stock Data**
+4. ** Real-Time Stock Data**
 
    * The **yfinance** library fetches the current **live stock price** of the entered company.
    * It also retrieves **3 months of historical stock price data** for all competitors identified by the LLM.
 
-5. **🏆 Top 3 Competitors by Market Cap**
+5. ** Top 3 Competitors by Market Cap**
 
    * From the pool of peer competitors across all sectors, the top 3 are selected based on their **market capitalization**.
 
-6. **📊 Visual Graph Output**
+6. ** Visual Graph Output**
 
    * A **line chart** is rendered showing the **3-month price trend** of the top 3 competitors for visual comparison.
 
 ---
 
-**🔎 Example Output**
+** Example Output**
 
 ```
 Company: Tesla, Inc. (TSLA)
@@ -142,19 +142,19 @@ This layered output gives users a **holistic and sector-aware view** of a compan
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Feel free to fork the repo and submit a pull request.
 
 ---
 
-## 🙋‍♂️ How to Contribute
+##  How to Contribute
 
 We welcome contributions from everyone! 🚀
 
 If you're new to open-source, you can start with our [Good First Issues](https://github.com/sharathchandra-patil/StockMind/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
-### 🛠 Steps to Contribute:
+###  Steps to Contribute:
 
 1. Fork this repository.
 2. Clone your forked repo locally.
@@ -165,7 +165,7 @@ If you're new to open-source, you can start with our [Good First Issues](https:/
 7. Push your branch and open a Pull Request (PR) to the `main` branch.
 8. Wait for review and feedback!
 
-### 💬 Contribution Ideas:
+###  Contribution Ideas:
 
 * Solve an open [Good First Issue](https://github.com/sharathchandra-patil/StockMind/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 * Fix bugs
@@ -173,12 +173,12 @@ If you're new to open-source, you can start with our [Good First Issues](https:/
 * Add new features (Check open [Feature Requests](https://github.com/sharathchandra-patil/StockMind/issues?q=is%3Aissue+label%3Afeature))
 * Optimize performance or UI
 
-📢 **Need help?**
+ **Need help?**
 Open a [Discussion](https://github.com/sharathchandra-patil/StockMind/discussions) or raise an Issue! We're happy to assist you.
 
 ---
 
-## 🛠️ Contribution Guidelines
+##  Contribution Guidelines
 
 * **Fork** this repository and **clone** it to your local machine.
 * **Create a new branch** for your feature or bug fix.
@@ -191,7 +191,7 @@ Open a [Discussion](https://github.com/sharathchandra-patil/StockMind/discussion
 
 ---
 
-## 👨‍💻 Contributors
+##  Contributors
 
 * Sharathchandra Patil
 * Srajan VN
